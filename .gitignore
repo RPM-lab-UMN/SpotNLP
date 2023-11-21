@@ -1,3 +1,8 @@
+# ROS Noetic catkin workspace
+build/
+devel/
+install/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
