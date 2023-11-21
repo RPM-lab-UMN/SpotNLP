@@ -1,0 +1,2 @@
+camera:mp_pose:xmem
+-DCATKIN_DEVEL_PREFIX=/home/adam/HRI/devel -DCMAKE_INSTALL_PREFIX=/home/adam/HRI/install -G Unix Makefiles

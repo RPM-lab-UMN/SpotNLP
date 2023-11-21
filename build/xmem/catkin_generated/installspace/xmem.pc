@@ -1,0 +1,8 @@
+prefix=/home/adam/HRI/install
+
+Name: xmem
+Description: Description of xmem
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
