@@ -3,6 +3,10 @@ build/
 devel/
 install/
 src/CMakeLists.txt
+*.catkin_tools/
+
+# Data
+*.bag
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

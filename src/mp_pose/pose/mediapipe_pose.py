@@ -16,6 +16,7 @@ def parse_result(result, output_image, header):
         # Generate person message
         person_msg = person()
         person_msg.pose = pose()
+        person_msg.pose.header = header
         person_msg.pose.local_landmarks = []
         person_msg.pose.world_landmarks = []
 
@@ -67,6 +68,7 @@ def main():
     options = PoseLandmarkerOptions(
         base_options=base_options, 
         running_mode=VisionRunningMode.VIDEO,
+        num_poses=4,
         # result_callback=print_result,
         output_segmentation_masks=True)
     detector = PoseLandmarker.create_from_options(options)

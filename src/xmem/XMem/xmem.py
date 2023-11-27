@@ -1,6 +1,6 @@
 import torch
 import rospy
-from mp_pose.msg import people
+from mp_pose.msg import people, pose, landmark
 import torch
 import numpy as np
 from PIL import Image
@@ -9,9 +9,32 @@ from inference.inference_core import InferenceCore
 import cv2
 from inference.interact.interactive_utils import image_to_torch, index_numpy_to_one_hot_torch, torch_prob_to_numpy_mask, overlay_davis
 
+def check_init_pose(pose):
+  # Check if pose is a T pose
+  landmarks = pose.local_landmarks
+  # 16: Right Wrist; 15: Left Wrist 
+  # 14: Right Elbow; 13: Left Elbow 
+  # 12: Right Shoulder; 11: Left Shoulder
+  # This is a T pose all joints are in a straight line
+  points = [16, 15, 14, 13, 12, 11]
+  head = [0]
+  for point in points+head:
+    if landmarks[point].visibility < 0.5:
+      return False
+  y_heights = []
+  for point in points:
+    y_heights.append(landmarks[point].y)
+  y_heights = np.array(y_heights)
+  # Check if all y heights are within 0.1 of each other
+  if np.max(y_heights) - np.min(y_heights) > 0.1:
+    print(np.max(y_heights), np.min(y_heights))
+    return False
+  return True
+
 def main():
   rospy.init_node('xmem', anonymous=True)
-  pub = rospy.Publisher('/xmem/people', people, queue_size=10)
+  pub_people = rospy.Publisher('/xmem/people', people, queue_size=10)
+  pub_pose = rospy.Publisher('/xmem/pose', pose, queue_size=10)
   torch.set_grad_enabled(False)
   torch.cuda.empty_cache()
   if torch.cuda.is_available():
@@ -53,7 +76,7 @@ def main():
       if init_mask is None:
         #TODO Check if any pose is a T pose
         for i in range(msg.num_people):
-          valid = True # TODO
+          valid = check_init_pose(msg.people[i].pose)
           if valid:
             mask = np.frombuffer(msg.people[i].image.data, dtype=np.uint8)
             mask = mask.reshape(msg.people[i].image.height, msg.people[i].image.width, -1)
@@ -64,13 +87,13 @@ def main():
             prediction = processor.step(frame_torch, mask_torch[1:])
             init_mask = True
             print('Initialized')
-            return
+        return
       prediction = processor.step(frame_torch)
       # prediction = torch_prob_to_numpy_mask(prediction)
       # Visualize
       prediction = prediction.to('cpu').detach().numpy()
       
-      max_IOU = 0.5
+      max_IOU = 0.92
       person_out = None
       for i in range(msg.num_people):
         mask = np.frombuffer(msg.people[i].image.data, dtype=np.uint8)
@@ -81,7 +104,7 @@ def main():
         # Calculate IoU
         pred = np.where(prediction[1] > 0.5, 1, 0)
         intersection = np.logical_and(pred, mask)
-        union = np.logical_or(pred, mask)
+        union = np.logical_or(pred, mask) + 1e-6
         iou_score = np.sum(intersection) / np.sum(union)
         print('IoU score: ', iou_score)
         if iou_score > max_IOU:
@@ -90,7 +113,8 @@ def main():
       if person_out is not None:
         msg.num_people = 1
         msg.people = [person_out]
-        pub.publish(msg)
+        pub_people.publish(msg)
+        pub_pose.publish(person_out.pose)
 
       cv2.imshow('frame', prediction[1])
       cv2.waitKey(1)
@@ -102,7 +126,9 @@ def main():
     def message_callback(msg):
       nonlocal people_message
       people_message = msg
+
     rospy.Subscriber('/pose/people', people, message_callback)
+    
     while not rospy.is_shutdown():
       if people_message is not None:
         people_callback(people_message)
