@@ -6,17 +6,8 @@ import cv2
 import numpy as np
 import colorsys
 import rospkg
-# from gesture import Dataset
-# print contents of gesture
-# import gesture
-import gesture
-print(dir(gesture))
-print(gesture.__file__)
-print(gesture.__path__)
-print(gesture.__package__)
-print(gesture.__name__)
 
-exit()
+from dataset.dataset import Dataset, test
 
 def keypoints_on_image(keypoints, image, dot_color):
     for keypoint in keypoints:
@@ -26,6 +17,8 @@ def keypoints_on_image(keypoints, image, dot_color):
     return image
 
 def main():
+    # data = Dataset()
+    test()
     parser = argparse.ArgumentParser()
     parser.add_argument('data_name', nargs='?', default='data', help='Name of the data to save')
     args = parser.parse_args()

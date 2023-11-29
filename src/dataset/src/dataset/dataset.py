@@ -1,5 +1,8 @@
 import zarr
 
+def test():
+    print('Hello World!')
+
 class Dataset:
     def __init__(self, path):
         self.path = path
