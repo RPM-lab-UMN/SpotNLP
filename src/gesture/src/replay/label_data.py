@@ -69,11 +69,13 @@ def main():
             # Add to dataset
             local_landmarks = np.array([np.array([np.array([keypoint.x, keypoint.y, keypoint.z, keypoint.visibility, keypoint.presence]) for keypoint in pose.local_landmarks]) for pose in msg.poses])
             world_landmarks = np.array([np.array([np.array([keypoint.x, keypoint.y, keypoint.z, keypoint.visibility, keypoint.presence]) for keypoint in pose.world_landmarks]) for pose in msg.poses])
+            local_landmarks = np.flip(local_landmarks, axis=0)
+            world_landmarks = np.flip(world_landmarks, axis=0)
             label = np.array([gt])
             timestamp = np.array([msg.header.stamp.to_nsec()])
             dataset.add_sample(local_landmarks, world_landmarks, label, timestamp)
             msg_num += 1
-        print(np.asarray(dataset.label))
+
     bag.close()
     dataset.close()
     dataset.print_shapes()

@@ -20,11 +20,11 @@ class WriteDataset:
                                  dtype='float32', 
                                  maxshape=(None, self.max_size, 33, 5),
                                  compressor=self.compress)
-        self.zarr_len = self.root.create_dataset('len_landmarks', 
-                                 shape=(0,1), 
-                                 chunks=(1000,), 
-                                 dtype='int32', 
-                                 maxshape=(None,))
+        self.zarr_len = self.root.create_dataset('mask_landmarks', 
+                                 shape=(0,self.max_size), 
+                                 chunks=(1000,self.max_size), 
+                                 dtype='bool', 
+                                 maxshape=(None,self.max_size),)
         self.zarr_label = self.root.create_dataset('label', 
                                  shape=(0,1), 
                                  chunks=(1000,), 
@@ -37,22 +37,27 @@ class WriteDataset:
                                  maxshape=(None,))
         self.local_landmarks = []
         self.world_landmarks = []
-        self.len_landmarks = []
+        self.mask_landmarks = []
         self.label = []
         self.timestamp = []
 
     def add_sample(self, local_landmarks, world_landmarks, label, timestamp):
-        local = np.zeros((self.max_size, 33, 5), dtype=np.float32) 
+        local = np.zeros((self.max_size, 33, 5), dtype=np.float32)
         local[:len(local_landmarks)] = local_landmarks
         world = np.zeros((self.max_size, 33, 5), dtype=np.float32)
         world[:len(world_landmarks)] = world_landmarks
-        len_landmarks = np.array([len(local_landmarks)])
+        # Boolean mask of valid landmarks
+        mask_landmarks = np.pad(np.ones(len(local_landmarks), dtype=bool), 
+                        (0, self.max_size - len(local_landmarks)), 
+                        'constant', 
+                        constant_values=False)
+
         label = np.array(label)
         timestamp = np.array(timestamp)
 
         self.local_landmarks.append(local)
         self.world_landmarks.append(world)
-        self.len_landmarks.append(len_landmarks)
+        self.mask_landmarks.append(mask_landmarks)
         self.label.append(label)
         self.timestamp.append(timestamp)
     
@@ -63,20 +68,20 @@ class WriteDataset:
         world = np.zeros((len(world_landmarks), self.max_size, 33, 5), dtype=np.float32)
         for i in range(len(world_landmarks)):
             world[i, :len(world_landmarks[i])] = np.expand_dims(world_landmarks[i], axis=0)
-        len_landmarks = np.array([len(local_landmarks[i]) for i in range(len(local_landmarks))])
+        mask_landmarks = np.array([len(local_landmarks[i]) for i in range(len(local_landmarks))])
         label = np.array(label)
         timestamp = np.array(timestamp)
 
         self.local_landmarks.append(local)
         self.world_landmarks.append(world)
-        self.len_landmarks.append(len_landmarks)
+        self.mask_landmarks.append(mask_landmarks)
         self.label.append(label)
         self.timestamp.append(timestamp)
 
     def remove_sample(self):
         self.local_landmarks.pop()
         self.world_landmarks.pop()
-        self.len_landmarks.pop()
+        self.mask_landmarks.pop()
         self.label.pop()
         self.timestamp.pop()
 
@@ -87,12 +92,12 @@ class WriteDataset:
         assert self.store is not None, 'Dataset not initialized'
         self.zarr_local.append(np.array(self.local_landmarks, dtype=np.float32))
         self.zarr_global.append(np.array(self.world_landmarks, dtype=np.float32))
-        self.zarr_len.append(np.array(self.len_landmarks, dtype=np.int32))
+        self.zarr_len.append(np.array(self.mask_landmarks, dtype=np.int32))
         self.zarr_label.append(np.array(self.label, dtype=np.int32))
         self.zarr_time.append(np.array(self.timestamp, dtype=np.int32))
         self.local_landmarks = []
         self.world_landmarks = []
-        self.len_landmarks = [] 
+        self.mask_landmarks = [] 
         self.label = []
         self.timestamp = []
 
@@ -106,7 +111,7 @@ class WriteDataset:
         assert self.store is not None, 'Dataset not initialized'
         print(f'local_landmarks: {self.zarr_local.shape}')
         print(f'world_landmarks: {self.zarr_global.shape}')
-        print(f'len_landmarks: {self.zarr_len.shape}')
+        print(f'mask_landmarks: {self.zarr_len.shape}')
         print(f'label: {self.zarr_label.shape}')
         print(f'timestamp: {self.zarr_time.shape}')
 
