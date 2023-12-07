@@ -8,6 +8,7 @@ src/CMakeLists.txt
 # Data
 *.bag
 *.zarr
+*.pth
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
