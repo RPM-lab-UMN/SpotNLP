@@ -4,12 +4,14 @@ import torch
 from dataset.dataset import PoseDataset
 from torch.utils.data import DataLoader
 from model.model import GestureClassifier
+from model.model_nn import GestureClassifierNN
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import numpy as np
 
 def main():
-    name = 'ym'
+    # name = 'alpha'
+    name = 'modalpha'
     pack_path = rospkg.RosPack().get_path('dataset')
     dataset_path = os.path.join(pack_path, 'dataset_raw',  f'{name}.zarr')
     dataset = PoseDataset(dataset_path)
@@ -26,6 +28,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Device: {device}')
     model = GestureClassifier(num_classes=num_classes).to(device)
+    # model = GestureClassifierNN(num_classes=num_classes).to(device)
     model.eval()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0000001)
 

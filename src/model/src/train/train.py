@@ -5,19 +5,32 @@ import numpy as np
 from dataset.dataset import PoseDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from model.model import GestureClassifier
+from model.model_nn import GestureClassifierNN
 
 def main():
-    name = 'ym'
+    # name = 'alpha'
+    name = 'modalpha'
     pack_path = rospkg.RosPack().get_path('dataset')
     dataset_path = os.path.join(pack_path, 'dataset_raw',  f'{name}.zarr')
     dataset = PoseDataset(dataset_path)
+    
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f'Device: {device}')
+    num_classes = 256
+    mod_version = "PIO"
+    if mod_version == "PIO":
+        model = GestureClassifier(num_classes=num_classes).to(device)
+        batch_size = 64
+    else:
+        model = GestureClassifierNN(num_classes=num_classes).to(device)
+        batch_size = 256
 
     all_labels = dataset.label[:].reshape(-1).tolist()
     class_counts = np.bincount(all_labels)
     class_weights = 1. / class_counts
     weights = class_weights[all_labels]
     sampler = WeightedRandomSampler(weights, len(weights))
-    loader = DataLoader(dataset, batch_size=60, sampler=sampler, num_workers=0)
+    loader = DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=0)
 
     distrobution = {}
     labels = dataset.label[:].reshape(-1).tolist()
@@ -26,10 +39,7 @@ def main():
         print(f'Label {label}: {labels.count(label)}')
         distrobution[label] = labels.count(label)
 
-    num_classes = 256
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Device: {device}')
-    model = GestureClassifier(num_classes=num_classes).to(device)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.CrossEntropyLoss()
 

@@ -7,6 +7,7 @@ import numpy as np
 import colorsys
 import rospkg
 import os
+import time
 
 from dataset.write_dataset import WriteDataset
 
@@ -55,12 +56,15 @@ def main():
             dot_color = tuple(int(255 * c) for c in hsv_color)
             image = keypoints_on_image(msg.poses[offset+i].local_landmarks, image, dot_color)
 
+        time.sleep(0.1) # TODO: Remove this
         cv2.imshow('frame', image)
         gt = cv2.waitKey(0)
         if gt == 190: # F1
             print('Exiting')
             break
         elif gt == 255: # Del
+            if msg_num == 0:
+                continue
             print(f'Redoing message {msg_num-1}')
             msg_num -= 1
             dataset.remove_sample()

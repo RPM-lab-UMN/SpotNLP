@@ -43,6 +43,8 @@ class WriteDataset:
 
     def add_sample(self, local_landmarks, world_landmarks, label, timestamp):
         local = np.zeros((self.max_size, 33, 5), dtype=np.float32)
+        if len(local_landmarks) == 0:
+            return
         local[:len(local_landmarks)] = local_landmarks
         world = np.zeros((self.max_size, 33, 5), dtype=np.float32)
         world[:len(world_landmarks)] = world_landmarks
