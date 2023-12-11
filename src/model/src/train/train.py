@@ -17,13 +17,15 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Device: {device}')
     num_classes = 256
-    mod_version = "PIO"
+    mod_version = "NN"
     if mod_version == "PIO":
         model = GestureClassifier(num_classes=num_classes).to(device)
         batch_size = 64
-    else:
+    elif mod_version == "NN":
         model = GestureClassifierNN(num_classes=num_classes).to(device)
         batch_size = 256
+    else:
+        raise Exception("Invalid model version")
 
     all_labels = dataset.label[:].reshape(-1).tolist()
     class_counts = np.bincount(all_labels)
@@ -64,7 +66,7 @@ def main():
             optimizer.step()
         print(f'Epoch {epoch} Loss: {loss.item()}')
 
-    torch.save(model.state_dict(), 'model.pth')
+    torch.save(model.state_dict(), f'../{mod_version}_{name}.pth')
 
 
     

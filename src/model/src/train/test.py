@@ -11,9 +11,9 @@ import numpy as np
 
 def main():
     # name = 'alpha'
-    name = 'modalpha'
+    test_data_name = 'modalpha'
     pack_path = rospkg.RosPack().get_path('dataset')
-    dataset_path = os.path.join(pack_path, 'dataset_raw',  f'{name}.zarr')
+    dataset_path = os.path.join(pack_path, 'dataset_raw',  f'{test_data_name}.zarr')
     dataset = PoseDataset(dataset_path)
     loader = DataLoader(dataset, batch_size=20, shuffle=True, num_workers=0)
     # Get distrobution of labels
@@ -27,14 +27,20 @@ def main():
     num_classes = 256
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Device: {device}')
-    model = GestureClassifier(num_classes=num_classes).to(device)
-    # model = GestureClassifierNN(num_classes=num_classes).to(device)
+
+    dataset_name = 'modalpha'
+    mod_version = "NN"
+    if mod_version == "PIO":
+        model = GestureClassifier(num_classes=num_classes).to(device)
+        batch_size = 64
+    elif mod_version == "NN":
+        model = GestureClassifierNN(num_classes=num_classes).to(device)
+        batch_size = 256
+    else:
+        raise Exception("Invalid model version")
     model.eval()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0000001)
-
-    # Load the pretrained model
-    # model.load_state_dict(torch.load('model.pth'))
-    model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(f'../{mod_version}_{dataset_name}.pth', map_location=torch.device('cpu')))
     model = model.to(device)
 
     correct = 0

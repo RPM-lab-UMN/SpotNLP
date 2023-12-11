@@ -1,5 +1,5 @@
 import rospy
-from mp_pose.msg import people, person, pose, landmark, depth_image, buffer
+from mp_pose.msg import people, buffer
 import numpy as np
 
 # Does Record Images
