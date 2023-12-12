@@ -8,7 +8,7 @@ src/CMakeLists.txt
 # Data
 *.bag
 *.zarr
-*.pth
+# *.pth
 *.log
 
 # Byte-compiled / optimized / DLL files

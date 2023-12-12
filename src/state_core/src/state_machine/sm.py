@@ -4,9 +4,10 @@ from std_msgs.msg import Bool, Int8, String
 def main():
     rospy.init_node('state_machine', anonymous=True)
     voice_pub = rospy.Publisher('/tts/speech', String, queue_size=10)
-    follow_distance_pub = rospy.Publisher('/movement/follow_distance', Int8, queue_size=10)
     follow_pub = rospy.Publisher('/movement/follow', Bool, queue_size=10)
-    emote_pub = rospy.Publisher('/emote', String, queue_size=10)
+    follow_distance_pub = rospy.Publisher('/movement/follow_distance', Int8, queue_size=10)
+    emote_pub = rospy.Publisher('/emote/emote', Bool, queue_size=10)
+    emote_type_pub = rospy.Publisher('/emote/type', String, queue_size=10)
 
 
     state = 'idle'
@@ -23,6 +24,7 @@ def main():
                 print('Follow')
             elif data == 'n':
                 state = 'emote'
+                emote_pub.publish(True)
                 voice_pub.publish('Emote mode!')
                 print('Emote')
         elif state == 'follow':
@@ -46,26 +48,27 @@ def main():
         elif state == 'emote':
             if data == 'n':
                 state = 'idle'
+                emote_pub.publish(False)
                 voice_pub.publish('Exited emote mode!')
                 print('Idle')
             if data == '1':
-                emote_pub.publish('yes')
+                emote_type_pub.publish('yes')
                 voice_pub.publish('Yes')
                 print('Yes')
             if data == '2':
-                emote_pub.publish('no')
+                emote_type_pub.publish('no')
                 voice_pub.publish('No')
                 print('No')
             if data == '3':
-                emote_pub.publish('maybe')
+                emote_type_pub.publish('maybe')
                 voice_pub.publish('Maybe')
                 print('Maybe')
             if data == 's':
-                emote_pub.publish('sit')
+                emote_type_pub.publish('sit')
                 voice_pub.publish('Sit')
                 print('Sit')
             if data == 'e':
-                emote_pub.publish('stand')
+                emote_type_pub.publish('stand')
                 voice_pub.publish('Stand')
                 print('Stand')
 
