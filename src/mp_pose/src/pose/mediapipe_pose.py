@@ -5,6 +5,7 @@ import numpy as np
 import rospy
 from mp_pose.msg import people, person, pose, landmark, depth_image
 from sensor_msgs.msg import Image
+import rospkg
 
 
 def parse_result(result, output_image, header):
@@ -63,8 +64,9 @@ def main():
     PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
     VisionRunningMode = mp.tasks.vision.RunningMode
 
+    path = rospkg.RosPack().get_path('mp_pose')
     base_options = BaseOptions(
-        model_asset_path='pose_landmarker_heavy.task')
+        model_asset_path=path + '/src/pose/pose_landmarker_heavy.task')
     options = PoseLandmarkerOptions(
         base_options=base_options, 
         running_mode=VisionRunningMode.VIDEO,

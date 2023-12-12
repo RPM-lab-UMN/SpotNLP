@@ -1,15 +1,17 @@
 import torch
 import rospy
+import rospkg
 from model.model import GestureClassifier
 from model.model_nn import GestureClassifierNN
 from mp_pose.msg import buffer
 import cv2
 import numpy as np
+from std_msgs.msg import String
 
 
 def main():
     rospy.init_node('inference')
-    class_pub = rospy.Publisher('/inference/class', rospy.String, queue_size=10)
+    class_pub = rospy.Publisher('/inference/class', String, queue_size=10)
 
     num_classes = 256
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -25,8 +27,9 @@ def main():
         batch_size = 256
     else:
         raise Exception("Invalid model version")
+    path = rospkg.RosPack().get_path('model')
     model.eval()
-    model.load_state_dict(torch.load(f'../{mod_version}_{dataset_name}.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(path + f'/src/{mod_version}_{dataset_name}.pth', map_location=torch.device('cpu')))
     model = model.to(device)
 
     frame_num = 0
@@ -41,16 +44,17 @@ def main():
         class_pub.publish(chr(output_val.item()))
         rospy.loginfo(f'Prediction: {chr(output_val.item())}')
 
-        image = np.frombuffer(msg.color.data, dtype=np.uint8)
-        image = image.reshape(msg.color.height, msg.color.width, -1)
-        mask = np.frombuffer(msg.mask.data, dtype=np.uint8)
-        mask = mask.reshape(msg.mask.height, msg.mask.width, -1)
-        image = np.where(mask > 0, image, 0)
-        cv2.addText(image, str(chr(output_val.item())), (20, 60), 'Arial', 48, (255, 0, 255), 2)
-        cv2.addText(image, str(frame_num), (20, 120), 'Arial', 48, (255, 0, 255), 2)
-        cv2.imshow('frame', image)
-        cv2.waitKey(1)
-        frame_num += 1
+        if True:
+            image = np.frombuffer(msg.color.data, dtype=np.uint8)
+            image = image.reshape(msg.color.height, msg.color.width, -1)
+            mask = np.frombuffer(msg.mask.data, dtype=np.uint8)
+            mask = mask.reshape(msg.mask.height, msg.mask.width, -1)
+            image = np.where(mask > 0, image, 0)
+            cv2.addText(image, str(chr(output_val.item())), (20, 60), 'Arial', 48, (255, 0, 255), 2)
+            cv2.addText(image, str(frame_num), (20, 120), 'Arial', 48, (255, 0, 255), 2)
+            cv2.imshow('frame', image)
+            cv2.waitKey(1)
+            frame_num += 1
 
 
     message = None

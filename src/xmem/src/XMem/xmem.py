@@ -1,5 +1,6 @@
 import torch
 import rospy
+import rospkg
 from mp_pose.msg import people, pose, landmark
 import torch
 import numpy as np
@@ -56,7 +57,8 @@ def main():
       'max_long_term_elements': 10000,
       # 'single_object': True,
   }
-  network = XMem(config, './saves/XMem.pth').eval().to(device)
+  path = rospkg.RosPack().get_path('xmem')
+  network = XMem(config, path + '/src/XMem/saves/XMem.pth').eval().to(device)
 
   num_objects = 1
   processor = InferenceCore(network, config=config)

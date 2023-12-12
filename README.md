@@ -6,6 +6,10 @@ This project aims to create a robust framework for human interaction with Boston
 
 ## Installation
 
+
+TTS:
+apt install espeak
+
 Mamba Environment:
 TODO
 
