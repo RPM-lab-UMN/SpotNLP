@@ -31,8 +31,14 @@ def main():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
+    spot = True
+    if spot:
+        camera = {'name': 'Spot Camera', 'package': 'camera', 'script': 'src/spot/spot.py'}
+    else:
+        camera = {'name': 'RealSense Camera', 'package': 'camera', 'script': 'src/realsense/realsense.py'}
+
     nodes = [
-        {'name': 'Camera', 'package': 'camera', 'script': 'src/realsense/realsense.py'},
+        camera,
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
         {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
