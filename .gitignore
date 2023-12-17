@@ -9,8 +9,8 @@ src/CMakeLists.txt
 *.bag
 *.zarr
 # *.pth
-XMem.pth
 *.log
+XMem.pth
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

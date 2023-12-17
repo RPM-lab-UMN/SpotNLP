@@ -1,12 +1,13 @@
 # Copyright (c) 2023 Boston Dynamics, Inc.  All rights reserved. # CREDIT BOSTON DYNAMICS image_viewer.py
-import argparse
+import rospy
+from mp_pose.msg import depth_image
+
 import logging
 import sys
 import time
-
 import cv2
 import numpy as np
-
+import signal
 import bosdyn.client
 import bosdyn.client.util
 from bosdyn.api import image_pb2
@@ -61,36 +62,28 @@ def reset_image_client(robot):
 
 
 def main(argv):
-    # Parse args
-    parser = argparse.ArgumentParser()
-    bosdyn.client.util.add_base_arguments(parser)
+    rospy.init_node("SpotCamera", anonymous=True)
+    pub = rospy.Publisher('/pose/rgbd_image', depth_image, queue_size=10)
+    msg = depth_image()
+    
 
-    # Create robot object with an image client.
     sdk = bosdyn.client.create_standard_sdk('image_capture')
-    robot = sdk.create_robot(os.environ['BOSDYN_W_IP']) # or BOSDYN_E_IP
+    robot = sdk.create_robot(os.environ['BOSDYN_E_IP']) # or BOSDYN_E_IP
     bosdyn.client.util.authenticate(robot)
     robot.sync_with_directory()
     robot.time_sync.wait_for_sync()
 
+    mod = 1
     image_client = robot.ensure_client(ImageClient.default_service_name)
     print(image_pb2.Image.PixelFormat.keys())
-    # ['PIXEL_FORMAT_UNKNOWN', 'PIXEL_FORMAT_GREYSCALE_U8', 'PIXEL_FORMAT_RGB_U8', 'PIXEL_FORMAT_RGBA_U8', 'PIXEL_FORMAT_DEPTH_U16', 'PIXEL_FORMAT_GREYSCALE_U16']
-    pixels = [image_pb2.Image.PixelFormat.Value('PIXEL_FORMAT_RGB_U8'),
-                image_pb2.Image.PixelFormat.Value('PIXEL_FORMAT_DEPTH_U16')
-    ]
-    # image_sources = image_client.list_image_sources()
-    # print(image_sources)
-    # , name: "hand_color_image"
-    # , name: "hand_color_in_hand_depth_frame"
-    # , name: "hand_depth"
-    # , name: "hand_depth_in_hand_color_frame"
-    # , name: "hand_image"
+    pixel_format = [image_pb2.Image.PixelFormat.Value('PIXEL_FORMAT_RGB_U8'),
+                image_pb2.Image.PixelFormat.Value('PIXEL_FORMAT_DEPTH_U16') ]
     image_sources = ['hand_color_image', 'hand_depth_in_hand_color_frame']
     resize_ratio = 1.0
-    auto_rotate = False
+    quality_percent = 80
     requests = [
-        build_image_request(image_source_name=source, quality_percent=80,
-                            pixel_format=format, resize_ratio=resize_ratio) for source, format in zip(image_sources, pixels)
+        build_image_request(image_source_name=source, quality_percent=quality_percent,
+                            pixel_format=format, resize_ratio=resize_ratio) for source, format in zip(image_sources, pixel_format)
     ]
 
     disable_full_screen = False
@@ -101,13 +94,19 @@ def main(argv):
         else:
             cv2.setWindowProperty(image_source, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+    def signal_handler(signal, frame):
+        cv2.destroyAllWindows()
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+
     keystroke = None
     timeout_count_before_reset = 0
-    image_count = 0
+    num_frames = 0
+    rate = rospy.Rate(6) # 6 Hz
     while keystroke != VALUE_FOR_Q_KEYSTROKE and keystroke != VALUE_FOR_ESC_KEYSTROKE:
         t1 = time.time()
         try:
-            images_future = image_client.get_image_async(requests, timeout=0.5)
+            images_future = image_client.get_image_async(requests, timeout=1.0)
             while not images_future.done():
                 keystroke = cv2.waitKey(1)
                 # print(keystroke)
@@ -126,14 +125,36 @@ def main(argv):
         except Exception as err:
             _LOGGER.warning(err)
             continue
+
+        color, depth = None, None
         for i in range(len(images)):
-            image, _ = image_to_opencv(images[i], auto_rotate)
-            # Check if image is greyscale
-            if image.dtype == np.uint16:
+            image, _ = image_to_opencv(images[i], False)
+            if i == 0:
+                color = image.copy()
+            if i == 1:
+                depth = image.copy()
                 image = image * 20
             cv2.imshow(images[i].source.name, image)
+        
+        if color is None or depth is None:
+            continue
+        msg.header.stamp = rospy.Time.now()
+        msg.color.height, msg.color.width = color.shape[:2]
+        msg.depth.height, msg.depth.width = depth.shape[:2]
+        msg.color.data = color.tobytes()
+        msg.depth.data = depth.tobytes()
+        msg.color.encoding = 'bgr8'
+        msg.depth.encoding = '16UC1'
+        msg.color.header = msg.header
+        msg.depth.header = msg.header
+        num_frames += 1
+        if num_frames % mod == 0:
+            pub.publish(msg)
+        rate.sleep()
+
+
         keystroke = 1
-        image_count += 1
+        num_frames += 1
         print(f'Mean image retrieval rate: {1/(time.time() - t1)}Hz')
 
 

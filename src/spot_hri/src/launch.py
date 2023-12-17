@@ -33,7 +33,7 @@ def main():
 
     spot = True
     if spot:
-        camera = {'name': 'Spot Camera', 'package': 'camera', 'script': 'src/spot/spot.py'}
+        camera = {'name': 'Spot Camera', 'package': 'camera', 'script': 'src/spot_hand/hand_rgbd.py'}
     else:
         camera = {'name': 'RealSense Camera', 'package': 'camera', 'script': 'src/realsense/realsense.py'}
 

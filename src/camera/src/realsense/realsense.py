@@ -34,7 +34,7 @@ class RealSenseCamera:
         self.pipeline.stop()
 
 if __name__ == '__main__':
-    rospy.init_node('camera', anonymous=True)
+    rospy.init_node('RealSenseCamera', anonymous=True)
     frame_rate = 6
     mod = 1
     camera = RealSenseCamera(640, 480,frame_rate)
