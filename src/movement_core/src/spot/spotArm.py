@@ -77,12 +77,19 @@ class SpotArm:
         sh0, sh1, el0, el1, wr0, wr1 = joints
         traj_point = RobotCommandBuilder.create_arm_joint_trajectory_point(
             sh0, sh1, el0, el1, wr0, wr1)
-        arm_joint_traj = arm_command_pb2.ArmJointTrajectory(points=[traj_point])
+        max_vel = wrappers_pb2.DoubleValue(value=1)
+        max_acc = wrappers_pb2.DoubleValue(value=5)
+        arm_joint_traj = arm_command_pb2.ArmJointTrajectory(
+            points=[traj_point], times=[0], max_velocity=max_vel, max_acceleration=max_acc)
         command = self._make_robot_command(arm_joint_traj)
         cmd_id = self._command_client.robot_command(command)
         if block:
             self._command_client.robot_command_feedback(cmd_id)
             block_until_arm_arrives(self._command_client, cmd_id, 5.0)
+
+    # def velocityJ(self, joints, block=False):
+    #     sh0, sh1, el0, el1, wr0, wr1 = joints
+    #     traj_point = RobotCommandBuilder.
 
 
     def gripper_light(self, LED_on, fraction):
