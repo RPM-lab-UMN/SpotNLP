@@ -1,21 +1,36 @@
 import rospy
 import time
 import math
-from mp_pose.msg import pose
+import numpy as np
+from mp_pose.msg import people
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
+
+import cv2
 
 
 def main():
     rospy.init_node('SpotAPI')
     local_landmarks = None
-    follow = False
-    follow_dist = 0.5
+    local_image = None
+    # mode = False
+    mode = "follow"
+    follow_dist = 1.5
     def pose_callback(msg):
         nonlocal local_landmarks
-        local_landmarks = msg.local_landmarks
-    rospy.Subscriber('/xmem/pose', pose, pose_callback)
+        nonlocal local_image
+        local_landmarks = msg.people[0].pose.local_landmarks
+        depth = msg.depth
+        depth = np.frombuffer(depth.data, dtype=np.uint16)
+        depth = depth.reshape(msg.depth.height, msg.depth.width, -1)
+        mask = msg.people[0].image
+        mask = np.frombuffer(mask.data, dtype=np.uint8)
+        mask = mask.reshape(msg.people[0].image.height, msg.people[0].image.width, -1)
+        depth = np.where(mask > 0, depth, 0)
+        depth = depth[:,:,0]
+        local_image = depth
+    rospy.Subscriber('/xmem/people', people, pose_callback)
 
 
     spot = SpotAPI("BOSDYN_E_IP")
@@ -48,7 +63,7 @@ def main():
         light = (math.sin(diff*math.pi) + 1) / 2
         arm.gripper_light(True, light)
 
-        if local_landmarks is not None:
+        if local_landmarks is not None and local_image is not None:
             
             centerpoints = [11,12,23,24]
             # Get the average X and Y coordinates of the centerpoints
@@ -59,12 +74,30 @@ def main():
                 y += local_landmarks[i].y
             x /= len(centerpoints)
             y /= len(centerpoints)
-            print(x, y)
-            joints[0] -= (x-0.5) * 0.25
-            if follow:
-                pass
+            # print(x, y)
+            # Get the quartile of the depth of the image, excluding 0s
+            depth = local_image[local_image > 0]
+            length = len(depth)
+            if not length == 0:
+                q10 = np.quantile(depth, 0.1)
+                q90 = np.quantile(depth, 0.9)
+                depth = depth[(depth >= q10) & (depth <= q90)]
+                depth = np.mean(depth)/1000
+                print(depth, length)
             else:
-                arm.moveJ(joints)
+                depth = None
+            if mode == "follow":
+                joints[0] =0
+                if depth is None:
+                    x_vel = 0.0
+                else:
+                    x_vel = (depth-follow_dist)*1.0
+                rot_vel = (x-0.5) * -2
+                move.move(v_x=x_vel, v_y=0.0, v_rot=rot_vel)
+            elif mode == "emote":
+                joints[0] -= (x-0.5) * 0.35
+                pass
+            arm.moveJ(joints)
             local_landmarks = None
         rate.sleep()
         

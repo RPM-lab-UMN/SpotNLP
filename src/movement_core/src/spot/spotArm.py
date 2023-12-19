@@ -77,10 +77,10 @@ class SpotArm:
         sh0, sh1, el0, el1, wr0, wr1 = joints
         traj_point = RobotCommandBuilder.create_arm_joint_trajectory_point(
             sh0, sh1, el0, el1, wr0, wr1)
-        max_vel = wrappers_pb2.DoubleValue(value=1)
-        max_acc = wrappers_pb2.DoubleValue(value=5)
+        max_vel = wrappers_pb2.DoubleValue(value=5)
+        max_acc = wrappers_pb2.DoubleValue(value=1)
         arm_joint_traj = arm_command_pb2.ArmJointTrajectory(
-            points=[traj_point], times=[0], max_velocity=max_vel, max_acceleration=max_acc)
+            points=[traj_point], maximum_velocity=max_vel, maximum_acceleration=max_acc)
         command = self._make_robot_command(arm_joint_traj)
         cmd_id = self._command_client.robot_command(command)
         if block:

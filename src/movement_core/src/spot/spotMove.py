@@ -28,7 +28,7 @@ class SpotMove:
             end_time_secs=time.time() + self.duration_sec)
         
     def move(self, v_x=0.0, v_y=0.0, v_rot=0.0):
-        print(f'Moving: v_x={v_x}, v_y={v_y}, v_rot={v_rot}', end='\r')
+        # print(f'Moving: v_x={v_x}, v_y={v_y}, v_rot={v_rot}', end='\r')
         self._velocity_cmd_helper('Moving...', v_x=v_x, v_y=v_y, v_rot=v_rot)
 
 
