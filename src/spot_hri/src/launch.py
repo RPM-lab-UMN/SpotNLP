@@ -6,6 +6,10 @@ import subprocess
 import os
 
 def launch_node(name, package, script):
+    if name == 'Sleep':
+        rospy.loginfo(f"Sleeping for {package} seconds")
+        rospy.sleep(package)
+        return None
     script_path = roslib.packages.get_pkg_dir(package) + '/' + script
     log_file = open(os.path.join(log_dir, f"{name}.log"), "w")
     process = subprocess.Popen(['python3', '-u', script_path], stdout=log_file, stderr=subprocess.STDOUT)
@@ -38,7 +42,8 @@ def main():
         camera = {'name': 'RealSense Camera', 'package': 'camera', 'script': 'src/realsense/realsense.py'}
 
     nodes = [
-        camera,
+        {'name': 'Movement', 'package': 'movement_core', 'script': 'src/spot/spot.py'},
+        {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
         {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
@@ -46,7 +51,7 @@ def main():
         {'name': 'Event', 'package': 'state_core', 'script': '/src/event/event.py'},
         {'name': 'SM', 'package': 'state_core', 'script': '/src/state_machine/sm.py'},
         {'name': 'TTS', 'package': 'tts', 'script': 'src/tts/speech.py'},
-
+        camera,
     ]
 
     for node in nodes:

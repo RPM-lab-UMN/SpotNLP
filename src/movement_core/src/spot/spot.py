@@ -3,6 +3,7 @@ import time
 import math
 import numpy as np
 from mp_pose.msg import people
+from std_msgs.msg import Bool, Float32
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
@@ -15,8 +16,20 @@ def main():
     local_landmarks = None
     local_image = None
     # mode = False
-    mode = "follow"
-    follow_dist = 1.5
+    mode = "emote"
+    def movement_callback(msg):
+        nonlocal mode
+        if msg.data:
+            mode = "follow"
+        else:
+            mode = "emote"
+    rospy.Subscriber('/movement/follow', Bool, movement_callback)
+    follow_dist = 1.0
+    def follow_dist_callback(msg):
+        nonlocal follow_dist
+        follow_dist = msg.data
+    rospy.Subscriber('/movement/follow_distance', Float32, follow_dist_callback)
+
     def pose_callback(msg):
         nonlocal local_landmarks
         nonlocal local_image
@@ -37,19 +50,13 @@ def main():
     move = SpotMove(spot, 1.0)
     arm = SpotArm(spot)
 
-    arm.image_resolution('640x480')
+    # arm.image_resolution('640x480')
     spot.power_on()
     move.stand()
     print('Done.')
     arm.arm_unstow()
     print('Unstowed.')
-    # arm.moveL(0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 1.0)
-    sh0 = 0.00
-    sh1 = -2.8
-    el0 = 1.5
-    el1 = -0.00
-    wr0 = 1.5
-    wr1 = 0.0
+    sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
     joints = [sh0, sh1, el0, el1, wr0, wr1]
     arm.moveJ(joints)
     arm.move_gripper(1.0)
@@ -61,6 +68,8 @@ def main():
         # Sin wave of seconds
         diff = time.time() - start_time
         light = (math.sin(diff*math.pi) + 1) / 2
+        if mode == "follow":
+            light = np.round(light)
         arm.gripper_light(True, light)
 
         if local_landmarks is not None and local_image is not None:

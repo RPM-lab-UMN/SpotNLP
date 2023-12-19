@@ -1,11 +1,11 @@
 import rospy
-from std_msgs.msg import Bool, Int8, String
+from std_msgs.msg import Bool, Float32, String
 
 def main():
     rospy.init_node('state_machine', anonymous=True)
     voice_pub = rospy.Publisher('/tts/speech', String, queue_size=10)
     follow_pub = rospy.Publisher('/movement/follow', Bool, queue_size=10)
-    follow_distance_pub = rospy.Publisher('/movement/follow_distance', Int8, queue_size=10)
+    follow_distance_pub = rospy.Publisher('/movement/follow_distance', Float32, queue_size=10)
     emote_pub = rospy.Publisher('/emote/emote', Bool, queue_size=10)
     emote_type_pub = rospy.Publisher('/emote/type', String, queue_size=10)
 
@@ -34,15 +34,15 @@ def main():
                 voice_pub.publish('Stopped following you!')
                 print('Idle')
             elif data == '1':
-                follow_distance_pub.publish(1)
+                follow_distance_pub.publish(1.0)
                 voice_pub.publish('Follow distance 1')
                 print('Follow distance 1')
             elif data == '2':
-                follow_distance_pub.publish(2)
+                follow_distance_pub.publish(1.5)
                 voice_pub.publish('Follow distance 2')
                 print('Follow distance 2')
             elif data == '3':
-                follow_distance_pub.publish(3)
+                follow_distance_pub.publish(2.0)
                 voice_pub.publish('Follow distance 3')
                 print('Follow distance 3')
         elif state == 'emote':
