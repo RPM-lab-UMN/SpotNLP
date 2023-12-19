@@ -1,7 +1,7 @@
 import torch
 import rospy
 import rospkg
-from mp_pose.msg import people, pose, landmark
+from mp_pose.msg import people, pose
 import torch
 import numpy as np
 from PIL import Image
@@ -58,7 +58,7 @@ def main():
       # 'single_object': True,
   }
   path = rospkg.RosPack().get_path('xmem')
-  network = XMem(config, path + '/src/XMem/saves/XMem.pth').eval().to(device)
+  network = XMem(config, path + '/src/XMem/saves/XMem.pth', device).eval().to(device)
 
   num_objects = 1
   processor = InferenceCore(network, config=config)
@@ -129,7 +129,7 @@ def main():
       nonlocal people_message
       people_message = msg
 
-    rospy.Subscriber('/pose/people', people, message_callback)
+    rospy.Subscriber('/pose/people', people, message_callback, queue_size=1)
     
     while not rospy.is_shutdown():
       if people_message is not None:
