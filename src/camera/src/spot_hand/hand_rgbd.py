@@ -63,7 +63,7 @@ def reset_image_client(robot):
 
 def main(argv):
     rospy.init_node("SpotCamera", anonymous=True)
-    pub = rospy.Publisher('/pose/rgbd_image', depth_image, queue_size=10)
+    pub = rospy.Publisher('/camera/rgbd_image', depth_image, queue_size=10)
     msg = depth_image()
     
 

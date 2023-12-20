@@ -606,7 +606,6 @@ dependencies:
       - sympy==1.12
       - tensorboard==2.15.1
       - tensorboard-data-server==0.7.2
-      - thinplate==1.0.0
       - torch==2.1.1
       - torchvision==0.16.1
       - tqdm==4.66.1
@@ -614,4 +613,4 @@ dependencies:
       - urllib3==2.1.0
       - werkzeug==3.0.1
       - wrapt==1.16.0
-prefix: /home/adam/mambaforge/envs/hri
+prefix: /home/adam/miniforge3/envs/hri

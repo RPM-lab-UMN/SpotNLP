@@ -90,7 +90,7 @@ def main():
             out_msg.depth = msg.depth
             pub.publish(out_msg)
             
-        rospy.Subscriber('/pose/rgbd_image', depth_image, image_callback)
+        rospy.Subscriber('/camera/rgbd_image', depth_image, image_callback)
         rospy.spin()
 
 

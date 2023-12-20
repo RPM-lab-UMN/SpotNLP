@@ -44,7 +44,7 @@ if __name__ == '__main__':
         sys.exit(0)
     signal.signal(signal.SIGINT, signal_handler)
 
-    pub = rospy.Publisher('/pose/rgbd_image', depth_image, queue_size=10)
+    pub = rospy.Publisher('/camera/rgbd_image', depth_image, queue_size=10)
     msg = depth_image()
 
     print('Running! Press Ctrl+C to exit:')
