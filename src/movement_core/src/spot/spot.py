@@ -3,7 +3,7 @@ import time
 import math
 import numpy as np
 from mp_pose.msg import people
-from std_msgs.msg import Bool, Float32
+from std_msgs.msg import Bool, Float32, String
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
@@ -16,14 +16,10 @@ def main():
     local_landmarks = None
     local_image = None
     # mode = False
-    mode = "emote"
-    def movement_callback(msg):
-        nonlocal mode
-        if msg.data:
-            mode = "follow"
-        else:
-            mode = "emote"
-    rospy.Subscriber('/movement/follow', Bool, movement_callback)
+    mode = {
+        "state": "emote"
+    }
+    rospy.Subscriber('/movement/mode', String, lambda msg: mode.update({"state": msg.data}))
     follow_dist = 1.0
     def follow_dist_callback(msg):
         nonlocal follow_dist
@@ -65,49 +61,65 @@ def main():
     rate = rospy.Rate(100)
     start_time = time.time()
     while not rospy.is_shutdown():
-        # Sin wave of seconds
-        diff = time.time() - start_time
-        light = (math.sin(diff*math.pi) + 1) / 2
-        if mode == "follow":
-            light = np.round(light)
-        arm.gripper_light(True, light)
+        if mode["state"] == "stand":
+            if "standing" not in mode:
+                move.stand()
+                mode["standing"] = True
+        elif mode["state"] == "sit":
+            if "standing" in mode:
+                move.sit()
+                mode.pop("standing")
+        elif mode["state"] == "graphnav":
+            pass
 
-        if local_landmarks is not None and local_image is not None:
-            
-            centerpoints = [11,12,23,24]
-            # Get the average X and Y coordinates of the centerpoints
-            x = 0
-            y = 0
-            for i in centerpoints:
-                x += local_landmarks[i].x
-                y += local_landmarks[i].y
-            x /= len(centerpoints)
-            y /= len(centerpoints)
-            # print(x, y)
-            # Get the quartile of the depth of the image, excluding 0s
-            depth = local_image[local_image > 0]
-            length = len(depth)
-            if not length == 0:
-                q10 = np.quantile(depth, 0.1)
-                q90 = np.quantile(depth, 0.9)
-                depth = depth[(depth >= q10) & (depth <= q90)]
-                depth = np.mean(depth)/1000
-                print(depth, length)
-            else:
-                depth = None
-            if mode == "follow":
-                joints[0] =0
-                if depth is None:
-                    x_vel = 0.0
+
+        elif mode["state"] == "emote" or mode["state"] == "follow":
+            if "standing" not in mode:
+                move.stand()
+                mode["standing"] = True
+            # Sin wave of seconds
+            diff = time.time() - start_time
+            light = (math.sin(diff*math.pi) + 1) / 2
+            if mode["state"] == "follow":
+                light = np.round(light)
+            arm.gripper_light(True, light)
+
+            if local_landmarks is not None and local_image is not None:
+                
+                centerpoints = [11,12,23,24]
+                # Get the average X and Y coordinates of the centerpoints
+                x = 0
+                y = 0
+                for i in centerpoints:
+                    x += local_landmarks[i].x
+                    y += local_landmarks[i].y
+                x /= len(centerpoints)
+                y /= len(centerpoints)
+                # print(x, y)
+                # Get the quartile of the depth of the image, excluding 0s
+                depth = local_image[local_image > 0]
+                length = len(depth)
+                if not length == 0:
+                    q10 = np.quantile(depth, 0.1)
+                    q90 = np.quantile(depth, 0.9)
+                    depth = depth[(depth >= q10) & (depth <= q90)]
+                    depth = np.mean(depth)/1000
+                    print(depth, length)
                 else:
-                    x_vel = (depth-follow_dist)*1.0
-                rot_vel = (x-0.5) * -2
-                move.move(v_x=x_vel, v_y=0.0, v_rot=rot_vel)
-            elif mode == "emote":
-                joints[0] -= (x-0.5) * 0.35
-                pass
-            arm.moveJ(joints)
-            local_landmarks = None
+                    depth = None
+                if mode["state"] == "follow":
+                    joints[0] =0
+                    if depth is None:
+                        x_vel = 0.0
+                    else:
+                        x_vel = (depth-follow_dist)*1.0
+                    rot_vel = (x-0.5) * -2
+                    move.move(v_x=x_vel, v_y=0.0, v_rot=rot_vel)
+                elif mode["state"] == "emote":
+                    joints[0] -= (x-0.5) * 0.35
+                    pass
+                arm.moveJ(joints)
+                local_landmarks = None
         rate.sleep()
         
 

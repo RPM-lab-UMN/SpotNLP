@@ -47,10 +47,10 @@ def main():
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
         {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
-        {'name': 'Inference', 'package': 'model', 'script': 'src/inference/inference.py'},
-        {'name': 'Event', 'package': 'state_core', 'script': '/src/event/event.py'},
+        # {'name': 'Inference', 'package': 'model', 'script': 'src/inference/inference.py'},
+        # {'name': 'Event', 'package': 'state_core', 'script': '/src/event/event.py'},
         {'name': 'SM', 'package': 'state_core', 'script': '/src/state_machine/sm.py'},
-        {'name': 'TTS', 'package': 'tts', 'script': 'src/tts/speech.py'},
+        # {'name': 'TTS', 'package': 'tts', 'script': 'src/tts/speech.py'},
         camera,
     ]
 

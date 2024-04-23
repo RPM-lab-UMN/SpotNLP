@@ -1,3 +1,6 @@
+# Visual Studio Code
+.vscode/
+
 # ROS Noetic catkin workspace
 build/
 devel/

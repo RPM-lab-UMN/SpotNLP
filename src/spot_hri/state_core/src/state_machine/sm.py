@@ -3,7 +3,6 @@ from std_msgs.msg import Bool, Float32, String
 
 def main():
     rospy.init_node('state_machine', anonymous=True)
-    voice_pub = rospy.Publisher('/tts/speech', String, queue_size=10)
     follow_pub = rospy.Publisher('/movement/follow', Bool, queue_size=10)
     follow_distance_pub = rospy.Publisher('/movement/follow_distance', Float32, queue_size=10)
     emote_pub = rospy.Publisher('/emote/emote', Bool, queue_size=10)
@@ -20,56 +19,44 @@ def main():
             if data == 'e':
                 state = 'follow'
                 follow_pub.publish(True)
-                voice_pub.publish('Now following you!')
                 print('Follow')
             elif data == 'n':
                 state = 'emote'
                 emote_pub.publish(True)
-                voice_pub.publish('Emote mode!')
                 print('Emote')
         elif state == 'follow':
             if data == 'e':
                 state = 'idle'
                 follow_pub.publish(False)
-                voice_pub.publish('Stopped following you!')
                 print('Idle')
             elif data == '1':
                 follow_distance_pub.publish(1.0)
-                voice_pub.publish('Follow distance 1')
                 print('Follow distance 1')
             elif data == '2':
                 follow_distance_pub.publish(1.5)
-                voice_pub.publish('Follow distance 2')
                 print('Follow distance 2')
             elif data == '3':
                 follow_distance_pub.publish(2.0)
-                voice_pub.publish('Follow distance 3')
                 print('Follow distance 3')
         elif state == 'emote':
             if data == 'n':
                 state = 'idle'
                 emote_pub.publish(False)
-                voice_pub.publish('Exited emote mode!')
                 print('Idle')
             if data == '1':
                 emote_type_pub.publish('yes')
-                voice_pub.publish('Yes')
                 print('Yes')
             if data == '2':
                 emote_type_pub.publish('no')
-                voice_pub.publish('No')
                 print('No')
             if data == '3':
                 emote_type_pub.publish('maybe')
-                voice_pub.publish('Maybe')
                 print('Maybe')
             if data == 's':
                 emote_type_pub.publish('sit')
-                voice_pub.publish('Sit')
                 print('Sit')
             if data == 'e':
                 emote_type_pub.publish('stand')
-                voice_pub.publish('Stand')
                 print('Stand')
 
     rospy.Subscriber('/event/class', String, callback)

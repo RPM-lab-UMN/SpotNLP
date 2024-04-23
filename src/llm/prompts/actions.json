@@ -1,0 +1,38 @@
+{
+    "actions": [
+        {
+            "command": "speak",
+            "perameters": {
+                "text": "This is the text that the robot will speak."
+            },
+            "description": "This command will make the robot speak the text that is passed to it."
+        },
+        {
+            "command": "sit",
+            "perameters": {},
+            "description": "This command will make the robot sit down. It will stop following you if in follow mode."
+        },
+        {
+            "command": "stand",
+            "perameters": {},
+            "description": "This command will make the robot stand up if sitting, or stop follwing if in follow mode and stop looking if in look mode."
+        },
+        {
+            "command": "follow",
+            "perameters": {
+                "distance": 1
+            },
+            "distance": {
+                "Near": 0.5,
+                "Medium": 1,
+                "Far": 1.5
+            },
+            "description": "This command will make the robot follow you. You can set the distance between you and the robot. The default distance is 1 meter."
+        },
+        {
+            "command": "look",
+            "perameters": {},
+            "description": "This command will make the robot's arm rotate to look at you."
+        }
+    ]
+}

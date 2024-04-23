@@ -1,0 +1,19 @@
+{
+    "outputs": [
+        {
+            "rationale": "This is a comment that explains why this action is being taken",
+            "command": "action_name_0",
+            "perameters": {}
+        },
+        {
+            "rationale": "This is a comment that explains why this action is being taken",
+            "command": "action_name_1",
+            "perameters": {}
+        },
+        {
+            "rationale": "This is a comment that explains why this action is being taken",
+            "command": "action_name_2",
+            "perameters": {}
+        }
+    ]
+}
