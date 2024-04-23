@@ -27,6 +27,7 @@ class SpotAPI:
         self._power_client = self._robot.ensure_client(PowerClient.default_service_name)
         self._gripper_param_client = self._robot.ensure_client(GripperCameraParamClient.default_service_name)
 
+
     def estop_start(self):
         self._estop_client = self._robot.ensure_client('estop')
         self._estop_endpoint = bosdyn.client.estop.EstopEndpoint(

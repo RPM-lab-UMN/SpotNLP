@@ -7,6 +7,7 @@ from std_msgs.msg import Bool, Float32, String
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
+from spotGraphNav import SpotGraphNav
 
 import cv2
 
@@ -45,6 +46,8 @@ def main():
     spot = SpotAPI("BOSDYN_E_IP")
     move = SpotMove(spot, 1.0)
     arm = SpotArm(spot)
+    graph = SpotGraphNav(spot)
+
 
     # arm.image_resolution('640x480')
     spot.power_on()
