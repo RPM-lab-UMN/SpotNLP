@@ -52,6 +52,16 @@ class SpotAPI:
     def fan_power(self,power, duration): 
         self._power_client.fan_power_command_async(percent_power=power, duration=duration)
 
+    def __del__(self):
+        if self._robot.is_powered_on():
+            self._robot.power_off(cut_immediately=False)
+        if hasattr(self, '_lease_keep_alive'):
+            self._lease_client.return_lease(self._lease)
+            self._lease_keep_alive.shutdown()
+        if hasattr(self, '_estop_keep_alive'):
+            self._estop_keep_alive.shutdown()
+        print('SpotAPI deleted...')
+
 
 
 

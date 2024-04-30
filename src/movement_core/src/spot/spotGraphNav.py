@@ -1,6 +1,6 @@
 from bosdyn.client.graph_nav import GraphNavClient
 from bosdyn.client.map_processing import MapProcessingServiceClient
-from bosdyn.client.graph_nav_recording import GraphNavRecordingServiceClient
+from bosdyn.client.recording import GraphNavRecordingServiceClient
 from bosdyn.api.graph_nav import recording_pb2
 import os
 
@@ -9,7 +9,7 @@ class SpotGraphNav:
         if client_metadata is None:
              client_metadata = GraphNavRecordingServiceClient.make_client_metadata(
                 session_name='recording_test', 
-                client_username=self._robot._current_user, 
+                client_username=API._robot._current_user,  
                 client_id='RecordingClient',
                 client_type='Python SDK')
         self._robot = API._robot

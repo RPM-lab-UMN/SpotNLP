@@ -2,6 +2,7 @@ import torch
 import rospy
 import rospkg
 from mp_pose.msg import people, pose
+from std_msgs.msg import Bool
 import torch
 import numpy as np
 from PIL import Image
@@ -64,10 +65,13 @@ def main():
   processor = InferenceCore(network, config=config)
   processor.set_all_labels(range(1, num_objects+1)) # consecutive labels
 
-  init_mask = None
+  mask_config = {"reset": True}
+  rospy.Subscriber('/xmem/reset', Bool, lambda msg: mask_config.update({"reset": msg.data}))
+
+
   with torch.cuda.amp.autocast(enabled=True):
     def people_callback(msg):
-      nonlocal init_mask
+      nonlocal mask_config
       nonlocal processor
       nonlocal device
       nonlocal num_objects
@@ -75,7 +79,7 @@ def main():
       frame = np.frombuffer(msg.color.data, dtype=np.uint8)
       frame = frame.reshape(msg.color.height, msg.color.width, -1)
       frame_torch, _ = image_to_torch(np.copy(frame), device=device)
-      if init_mask is None:
+      if mask_config["reset"]:
         #TODO Check if any pose is a T pose
         for i in range(msg.num_people):
           valid = check_init_pose(msg.people[i].pose)
@@ -87,7 +91,7 @@ def main():
             mask = mask[:,:,0]
             mask_torch = index_numpy_to_one_hot_torch(mask, num_objects+1).to(device)
             prediction = processor.step(frame_torch, mask_torch[1:])
-            init_mask = True
+            mask_config["reset"] = False
             print('Initialized')
         return
       prediction = processor.step(frame_torch)

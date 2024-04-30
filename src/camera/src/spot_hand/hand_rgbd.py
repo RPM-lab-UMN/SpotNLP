@@ -13,6 +13,7 @@ import bosdyn.client.util
 from bosdyn.api import image_pb2
 from bosdyn.client.image import ImageClient, build_image_request
 from bosdyn.client.time_sync import TimedOutError
+from std_msgs.msg import Bool, Int64
 import os
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,12 +100,19 @@ def main(argv):
         sys.exit(0)
     signal.signal(signal.SIGINT, signal_handler)
 
+    publish_settings = {"enable": False, "rate": rospy.Rate(6)}
+    rospy.Subscriber("/camera/pub_enable", Bool, lambda msg: publish_settings.update({"enable": msg.data}))
+    rospy.Subscriber("/camera/pub_rate", Int64, lambda msg: publish_settings.update({"rate": rospy.Rate(msg.data)}))
+
     keystroke = None
     timeout_count_before_reset = 0
     num_frames = 0
     rate = rospy.Rate(6) # 6 Hz
     while keystroke != VALUE_FOR_Q_KEYSTROKE and keystroke != VALUE_FOR_ESC_KEYSTROKE:
-        t1 = time.time()
+        if not publish_settings["enable"]:
+            publish_settings["rate"].sleep()
+            continue
+        # t1 = time.time()
         try:
             images_future = image_client.get_image_async(requests, timeout=1.0)
             while not images_future.done():
@@ -150,12 +158,12 @@ def main(argv):
         num_frames += 1
         if num_frames % mod == 0:
             pub.publish(msg)
-        rate.sleep()
+        publish_settings["rate"].sleep()
 
 
         keystroke = 1
         num_frames += 1
-        print(f'Mean image retrieval rate: {1/(time.time() - t1)}Hz')
+        # print(f'Mean image retrieval rate: {1/(time.time() - t1)}Hz')
 
 
 if __name__ == '__main__':

@@ -4,8 +4,19 @@ import rosgraph
 import roslib
 import subprocess
 import os
+import atexit
+import os
+import signal
 
-def launch_node(name, package, script):
+def cleanup_processes(processes):
+    for process in processes:
+        if process is not None:
+            os.kill(process.pid, signal.SIGINT)
+    print("Killed all processes")
+
+
+def launch_node(params, log_dir):
+    name, package, script = params['name'], params['package'], params['script']
     if name == 'Sleep':
         rospy.loginfo(f"Sleeping for {package} seconds")
         rospy.sleep(package)
@@ -17,18 +28,16 @@ def launch_node(name, package, script):
     return process
 
 def start_roscore():
-    """
-    Starts a roscore.
-    """
     process = subprocess.Popen(['roscore'])
     rospy.loginfo(f"Launched node: roscore")
     return process
 
 def main():
-    global log_dir
-    # Check if roscore is running
+    processes = []
+    atexit.register(cleanup_processes, processes)
+
     if not rosgraph.is_master_online():
-        start_roscore()
+        processes.append(start_roscore())
     rospy.init_node('launch_nodes')
 
     log_dir = rospkg.RosPack().get_path('spot_hri') + '/log'
@@ -44,20 +53,21 @@ def main():
     nodes = [
         {'name': 'Movement', 'package': 'movement_core', 'script': 'src/spot/spot.py'},
         {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
-        # {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
-        # {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
+        {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
+        {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
         # {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
         # {'name': 'Inference', 'package': 'model', 'script': 'src/inference/inference.py'},
         # {'name': 'Event', 'package': 'state_core', 'script': '/src/event/event.py'},
         # {'name': 'SM', 'package': 'state_core', 'script': '/src/state_machine/sm.py'},
         # {'name': 'TTS', 'package': 'tts', 'script': 'src/tts/speech.py'},
-        # camera,
+        camera,
     ]
 
     for node in nodes:
-        launch_node(**node)
+        processes.append(launch_node(node, log_dir))
 
     rospy.spin()
+
 
 if __name__ == '__main__':
     main()

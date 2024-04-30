@@ -1,19 +1,18 @@
 import rospy
 import time
 import math
+import atexit
 import numpy as np
 from mp_pose.msg import people
 from std_msgs.msg import Bool, Float32, String
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
-from spotGraphNav import SpotGraphNav
-
-import cv2
-
+from spotGraphNav import SpotGraphNav   
 
 def main():
     rospy.init_node('SpotAPI')
+    print("Launching SpotAPI")
     local_landmarks = None
     local_image = None
     # mode = False
@@ -51,24 +50,29 @@ def main():
 
     # arm.image_resolution('640x480')
     spot.power_on()
-    move.stand()
-    print('Done.')
-    arm.arm_unstow()
-    print('Unstowed.')
-    sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
-    joints = [sh0, sh1, el0, el1, wr0, wr1]
-    arm.moveJ(joints)
-    arm.move_gripper(1.0)
-    spot.fan_power(0, 120)
+    # move.stand()
+    # arm.arm_unstow()
+    # print('Unstowed.')
+    # sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
+    # joints = [sh0, sh1, el0, el1, wr0, wr1]
+    # arm.moveJ(joints)
+    # arm.move_gripper(1.0)
+    # spot.fan_power(0, 120)
     print('Moved arm.')
     rate = rospy.Rate(100)
     start_time = time.time()
     while not rospy.is_shutdown():
         if mode["state"] == "stand":
+            if "deploy_arm" in mode:
+                arm.arm_stow()
+                mode.pop("deploy_arm")
             if "standing" not in mode:
                 move.stand()
                 mode["standing"] = True
         elif mode["state"] == "sit":
+            if "deploy_arm" in mode:
+                arm.arm_stow()
+                mode.pop("deploy_arm")
             if "standing" in mode:
                 move.sit()
                 mode.pop("standing")
@@ -76,10 +80,18 @@ def main():
             pass
 
 
-        elif mode["state"] == "emote" or mode["state"] == "follow":
+        elif mode["state"] == "look" or mode["state"] == "follow":
             if "standing" not in mode:
                 move.stand()
                 mode["standing"] = True
+            if "deploy_arm" not in mode:
+                arm.arm_unstow()
+                print('Unstowed.')
+                sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
+                joints = [sh0, sh1, el0, el1, wr0, wr1]
+                arm.moveJ(joints)
+                arm.move_gripper(1.0)
+                mode["deploy_arm"] = True
             # Sin wave of seconds
             diff = time.time() - start_time
             light = (math.sin(diff*math.pi) + 1) / 2
@@ -88,7 +100,6 @@ def main():
             arm.gripper_light(True, light)
 
             if local_landmarks is not None and local_image is not None:
-                
                 centerpoints = [11,12,23,24]
                 # Get the average X and Y coordinates of the centerpoints
                 x = 0
@@ -118,7 +129,7 @@ def main():
                         x_vel = (depth-follow_dist)*1.0
                     rot_vel = (x-0.5) * -2
                     move.move(v_x=x_vel, v_y=0.0, v_rot=rot_vel)
-                elif mode["state"] == "emote":
+                elif mode["state"] == "look":
                     joints[0] -= (x-0.5) * 0.35
                     pass
                 arm.moveJ(joints)
