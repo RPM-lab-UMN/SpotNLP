@@ -14,6 +14,9 @@ This project aims to create a robust framework for human interaction with the Bo
 
 ## Installation
 
+Commands:
+catkin build
+catkin clean 
 
 Mamba Environment:
 ```mamba env create -f environment.yml```
