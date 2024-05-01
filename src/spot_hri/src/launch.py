@@ -52,10 +52,10 @@ def main():
 
     nodes = [
         {'name': 'Movement', 'package': 'movement_core', 'script': 'src/spot/spot.py'},
-        {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
+        {'name': 'LLM', 'package': 'llm', 'script': 'src/openai/gpt4.py'},
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
-        {'name': 'LLM', 'package': 'llm', 'script': 'src/openai/gpt4.py'},
+        # {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
         
         # {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
         # {'name': 'Inference', 'package': 'model', 'script': 'src/inference/inference.py'},

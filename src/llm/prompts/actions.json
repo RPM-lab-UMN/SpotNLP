@@ -62,6 +62,14 @@
                 "filename": "default"
             },
             "description": "This command will download the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the file name of the map to download. The default file name is 'default'."
+        },
+        {
+            "command": "graph_nav_add_waypoint",
+            "perameters": {
+                "name": "name",
+                "description": "description"
+            },
+            "description": "This command will add a waypoint to the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the name of the waypoint to add. There should be a unique name for each waypoint. Add a description to each waypoint and ask the user if it is not clear, ask the user about the waypoint. If you need to ask and you are currently following the user, stop following the user and look instead."
         }
     ]
 }

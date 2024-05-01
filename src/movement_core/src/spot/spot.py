@@ -87,6 +87,11 @@ def main():
             print(graph.clear_graph())
             mode["graph_nav_clear"] = False
             print('Graph cleared.')
+        if mode["graph_nav_add_waypoint"] is not None:
+            name, description = mode["graph_nav_add_waypoint"].split('\n')
+            print(graph.create_waypoint(name, description))
+            mode["graph_nav_add_waypoint"] = None
+            print('Waypoint added.')
         print(graph.is_recording(),end='\r')
 
         if mode["state"] == "stand":

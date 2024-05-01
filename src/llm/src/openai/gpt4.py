@@ -113,7 +113,7 @@ def main():
                         print(command["perameters"])
 
                     if command["command"] == "graph_nav_add_waypoint":
-                        pub_graph_nav_add_waypoint.publish(command["perameters"]["waypoint_name"])
+                        pub_graph_nav_add_waypoint.publish(command["perameters"]["name"] + "\n" + command["perameters"]["description"])
                         print(command["perameters"])
 
 
