@@ -10,12 +10,12 @@
         {
             "command": "sit",
             "perameters": {},
-            "description": "This command will make the robot sit down. It will stop following you if in follow mode."
+            "description": "This command will make the robot sit down. It will stop following you if in follow mode. This also powers down the robot to save power. To wake the robot up, say use stand."
         },
         {
             "command": "stand",
             "perameters": {},
-            "description": "This command will make the robot stand up if sitting, or stop follwing if in follow mode and stop looking if in look mode."
+            "description": "This command will make the robot stand up if sitting, or stop follwing if in follow mode and stop looking if in look mode. This also powers up the robot."
         },
         {
             "command": "follow",
@@ -69,7 +69,7 @@
                 "name": "name",
                 "description": "description"
             },
-            "description": "This command will add a waypoint to the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the name of the waypoint to add. There should be a unique name for each waypoint. Add a description to each waypoint and ask the user if it is not clear, ask the user about the waypoint. If you need to ask and you are currently following the user, stop following the user and look instead."
+            "description": "This command will add a waypoint to the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the name of the waypoint to add. There should be a unique name for each waypoint. Add a description to each waypoint and ask the user if it is not clear, ask the user about the waypoint. If you need to ask and you are currently following the user, stop following the user and look instead but start follwing again after it is resolved."
         }
     ]
 }

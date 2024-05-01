@@ -1,0 +1,7 @@
+{
+    "input": {
+        "type": "Robot Environment Waypoints",
+        "Description": "A dictionary of  waypoints for the robot to navigate to. An empty dictionary implies that the map is empty or not loaded yet.",
+        "message": "__waypoints__"
+    }
+}

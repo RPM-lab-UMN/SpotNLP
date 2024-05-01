@@ -1,6 +1,7 @@
 {
     "input": {
         "type": "User Input",
+        "Description": "A command from the user.",
         "message": "__message__"
     }
 }

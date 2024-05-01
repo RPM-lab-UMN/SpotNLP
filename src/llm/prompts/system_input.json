@@ -1,0 +1,7 @@
+{
+    "input": {
+        "type": "Robot Status Report",
+        "Description": "This message contains information about the status of the robot. It is the most recent data, and there should be no more than one of these messages.",
+        "message": "__status__"
+    }
+}

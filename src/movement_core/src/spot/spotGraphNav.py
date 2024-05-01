@@ -2,6 +2,7 @@ from bosdyn.client.graph_nav import GraphNavClient
 from bosdyn.client.map_processing import MapProcessingServiceClient
 from bosdyn.client.recording import GraphNavRecordingServiceClient
 from bosdyn.api.graph_nav import recording_pb2
+import json
 import os
 
 class SpotGraphNav:
@@ -22,12 +23,22 @@ class SpotGraphNav:
                 client_metadata=client_metadata))
         
         self.graph_folder = graph_folder
-        self.waypoint_description = dict()
+        self.waypoints = dict()
         self._current_graph = None
         self._current_edges = dict()  #maps to_waypoint to list(from_waypoint)
         self._current_waypoint_snapshots = dict()  # maps id to waypoint snapshot
         self._current_edge_snapshots = dict()  # maps id to edge snapshot
         self._current_annotation_name_to_wp_id = dict()
+        
+        self.stop_recording()
+        self.clear_graph()
+
+    def get_status(self):
+        return {
+            'recording': self.is_recording(),
+            'num_waypoints': len(self.waypoints),
+            'waypoints': self.waypoints,
+        }
 
     def clear_graph(self):
         return self._graph_nav_client.clear_graph()
@@ -64,8 +75,26 @@ class SpotGraphNav:
     
     def create_waypoint(self, waypoint_name, waypoint_description):
         response = self._recording_client.create_waypoint(waypoint_name=waypoint_name)
+        # print(response)
         if response.status == recording_pb2.CreateWaypointResponse.STATUS_OK:
-            self.waypoint_description[waypoint_name] = waypoint_description
+            x = response.created_waypoint.waypoint_tform_ko.position.x
+            y = response.created_waypoint.waypoint_tform_ko.position.y
+            z = response.created_waypoint.waypoint_tform_ko.position.z
+            self.waypoints[waypoint_name] = {
+                "description": waypoint_description, 
+                "waypoint": {
+                    "id": response.created_waypoint.id,
+                    "snapshot_id": response.created_waypoint.snapshot_id,
+                    "position": {"x": x, "y": y, "z": z,},
+                },
+                "created_edge": {
+                    "id": {
+                        "from_waypoint": response.created_edge.id.from_waypoint,
+                        "to_waypoint": response.created_edge.id.to_waypoint,
+                    },
+                    "snapshot_id": response.created_edge.snapshot_id,
+                },
+            }
             return (True, response.created_waypoint.id)
         return (False, response.status)
     
@@ -74,19 +103,26 @@ class SpotGraphNav:
         if graph is None:
             return (False, 'Failed to download graph')
         filepath = os.path.join(self.graph_folder, filepath)
+        description_status = self.download_waypoint_descriptions(filepath)
         graph_status = self.download_graph(graph, filepath)
         waypoints_status = self.download_waypoints(graph.waypoints, filepath)
         edges_status = self.download_edges(graph.edges, filepath)
         return {
+            'description': description_status,
             'graph': graph_status,
             'waypoints': waypoints_status,
             'edges': edges_status,
         }
 
+    def download_waypoint_descriptions(self, filepath):
+        os.makedirs(filepath, exist_ok=True)
+        with open(os.path.join(filepath, 'waypoint_descriptions.json'), 'w') as f:
+            json.dump(self.waypoints, f, indent=4)  # Add indent parameter to make the JSON dump nicely formatted
+        return (True, 'Waypoint descriptions downloaded')
+
     def download_graph(self, graph, filepath):
         status = self._write_bytes(filepath, 'graph', graph.SerializeToString())
         return (status, 'Graph downloaded')
-
         
     def download_waypoints(self, waypoints, filepath):
         output_message = ''

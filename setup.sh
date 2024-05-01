@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
+# !/usr/bin/env bash
 ENV_NAME="hri"
+source ~/.bashrc
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate $ENV_NAME
 

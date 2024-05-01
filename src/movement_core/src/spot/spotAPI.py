@@ -67,6 +67,68 @@ class SpotAPI:
         print('SpotAPI deleted...')
 
 
+    def get_status(self):
+        status = self._robot_state_client.get_robot_state()
+        # print(status)
+        motor_states = {
+            0: 'MOTOR_POWER_STATE_UNKNOWN',
+            1: 'MOTOR_POWER_STATE_OFF',
+            2: 'MOTOR_POWER_STATE_ON',
+            3: 'MOTOR_POWER_STATE_POWERING_ON',
+            4: 'MOTOR_POWER_STATE_POWERING_OFF',
+            5: 'MOTOR_POWER_STATE_ERROR',
+        }
+        shore_power_states = {
+            0: 'SHORE_POWER_STATE_UNKNOWN',
+            1: 'SHORE_POWER_STATE_ON',
+            2: 'SHORE_POWER_STATE_OFF',
+        }
+        battery_states = {
+            0: 'STATUS_UNKNOWN',
+            1: 'STATUS_MISSING',
+            2: 'STATUS_CHARGING',
+            3: 'STATUS_DISCHARGING',
+            4: 'STATUS_BOOTING',
+        }
+        stow_states = {
+            0: 'STOWSTATE_UNKNOWN',
+            1: 'STOWSTATE_STOWED',
+            2: 'STOWSTATE_DEPLOYED',    
+        }
+        carry_states = {
+            0: 'CARRY_STATE_UNKNOWN',
+            1: 'CARRY_STATE_NOT_CARRIABLE',
+            2: 'CARRY_STATE_CARRIABLE',
+            3: 'CARRY_STATE_CARRIABLE_AND_STOWABLE',
+        }
+        estop_states = {
+            0: 'STATE_UNKNOWN',
+            1: 'STATE_ESTOPPED',
+            2: 'STATE_NOT_ESTOPPED',
+        }
+        estops = {}
+        for estop in status.estop_states:
+            estops[estop.name] = estop_states[estop.state]
+        
+        return {
+            "motor_power_state": motor_states[status.power_state.motor_power_state],
+            "shore_power_state": shore_power_states[status.power_state.shore_power_state],
+            "battery_states": {
+                "charge_percentage": status.battery_states[0].charge_percentage.value,
+                "estimated_runtime": status.battery_states[0].estimated_runtime.seconds,
+                "status": battery_states[status.battery_states[0].status],
+                "voltage": status.battery_states[0].voltage.value,
+                "current": status.battery_states[0].current.value,
+            },
+            "manipulator_state": {
+                "stow_state": stow_states[status.manipulator_state.stow_state],
+                "gripper_open_percentage": status.manipulator_state.gripper_open_percentage,
+                "carry_state": carry_states[status.manipulator_state.carry_state],
+            },
+            "estop_status": estops,
+            # "position": {} # TODO: Add position
+        }
+
 
 
 

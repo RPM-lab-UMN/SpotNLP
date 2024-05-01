@@ -11,6 +11,11 @@ def main():
     queue = []
     rospy.Subscriber('/speech/command', String, lambda msg: queue.append(msg.data))
 
+    robot_status = {"status": "{}","graph": "{}",}
+    rospy.Subscriber('/movement/status', String, lambda msg: robot_status.update({"status": msg.data}))
+    rospy.Subscriber('/movement/graph', String, lambda msg: robot_status.update({"graph": msg.data}))
+
+
     pub_camera_enable = rospy.Publisher('/camera/pub_enable', Bool, queue_size=10)
     pub_reset_xmem = rospy.Publisher('/xmem/reset', Bool, queue_size=10)
     pub_movement_mode = rospy.Publisher('/movement/mode', String, queue_size=10)
@@ -31,6 +36,8 @@ def main():
     # print(role)
 
     user_input = open(path + '/user_input.json').read()
+    system_input = open(path + '/system_input.json').read()
+    waypoint_input = open(path + '/system_waypoints.json').read()
 
     message_list = [
         { "role": "system", "content": role }
@@ -49,16 +56,23 @@ def main():
         while not rospy.is_shutdown():
             if queue:
                 f.write("--------------------------------\n")
-                text = user_input.replace("__message__", queue.pop(0))
+                status = robot_status.copy()
+                # print(status)
+                status_message = system_input.replace("__status__", status["status"])
+                waypoint_message = waypoint_input.replace("__waypoints__", status["graph"])
+                user_message = user_input.replace("__message__", queue.pop(0))
                 # TODO: Remove earlier messages if too many
-                message_list.append({ "role": "user", "content": text }) 
+                message_list.append({ "role": "system", "content": status_message })
+                message_list.append({ "role": "system", "content": waypoint_message })
+                message_list.append({ "role": "user", "content": user_message }) 
                 # TODO: Add system status message
                 response = get_response()
-                f.write(text + '\n---------------\n' + response + '\n')
+                f.write(user_message + '\n---------------\n' + response + '\n')
                 f.flush()
+                message_list.pop(-2)
+                message_list.pop(-2)
                 message_list.append({ "role": "system", "content": response })
                 commands = json.loads(response)["outputs"]
-
 
                 for command in commands:
                     # Logistical commands -------------------------------------------
@@ -115,7 +129,6 @@ def main():
                     if command["command"] == "graph_nav_add_waypoint":
                         pub_graph_nav_add_waypoint.publish(command["perameters"]["name"] + "\n" + command["perameters"]["description"])
                         print(command["perameters"])
-
 
             rospy.sleep(0.1)
 

@@ -10,13 +10,15 @@ from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
 from spotGraphNav import SpotGraphNav   
+import json
 
 def main():
     rospy.init_node('SpotAPI')
     print("Launching SpotAPI")
     local_landmarks = None
     local_image = None
-    # mode = False
+    
+
     mode = {
         "state": "None", 
         "fan_power": None, 
@@ -56,45 +58,64 @@ def main():
 
     map_path = rospkg.RosPack().get_path('movement_core') + '/src/maps'
 
-    spot = SpotAPI("BOSDYN_E_IP")
-    move = SpotMove(spot, 1.0)
-    arm = SpotArm(spot)
-    graph = SpotGraphNav(spot, map_path)
+    try:
+        for i in range(10):
+            spot = SpotAPI("BOSDYN_E_IP")
+            move = SpotMove(spot, 1.0)
+            arm = SpotArm(spot)
+            graph = SpotGraphNav(spot, map_path)
+            break
+    except Exception as e:
+        print(e)
+        time.sleep(1)
 
+    pub_status_graph = rospy.Publisher('/movement/graph', String, queue_size=10)
+    pub_status_spot = rospy.Publisher('/movement/status', String, queue_size=10)
+    rospy.timer.Timer(rospy.Duration(.1), lambda event: pub_status_spot.publish(json.dumps(spot.get_status())))
+    pub_status_graph.publish(json.dumps(graph.get_status()))
 
     # arm.image_resolution('640x480')
-    spot.power_on()
-    # rate = rospy.Rate(100)
-    rate = rospy.Rate(1)
+    loop_rate = rospy.Rate(4)
     start_time = time.time()
     while not rospy.is_shutdown():
+        # Misc
         if mode["fan_power"] is not None:
             spot.fan_power(mode["fan_power"], 120)
             mode["fan_power"] = None
+
+        # Graph Navigation
         if mode["graph_nav_record_start"]:
             print(graph.start_recording())
             mode["graph_nav_record_start"] = False
+            pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Recording started.')
         if mode["graph_nav_record_stop"]:
             print(graph.stop_recording())
             mode["graph_nav_record_stop"] = False
+            pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Recording stopped.')
         if mode["graph_nav_download"] is not None:
             print(graph.download_full_graph(mode["graph_nav_download"]))
             mode["graph_nav_download"] = None
+            pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Graph downloaded.')
         if mode["graph_nav_clear"]:
             print(graph.clear_graph())
             mode["graph_nav_clear"] = False
+            pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Graph cleared.')
         if mode["graph_nav_add_waypoint"] is not None:
             name, description = mode["graph_nav_add_waypoint"].split('\n')
             print(graph.create_waypoint(name, description))
             mode["graph_nav_add_waypoint"] = None
+            pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Waypoint added.')
-        print(graph.is_recording(),end='\r')
 
         if mode["state"] == "stand":
+            if "power_on" not in mode:
+                print('Powering on.')
+                spot.power_on()
+                mode["power_on"] = True
             if "deploy_arm" in mode:
                 arm.arm_stow(0.0)
                 mode.pop("deploy_arm")
@@ -102,17 +123,24 @@ def main():
                 move.stand()
                 mode["standing"] = True
         elif mode["state"] == "sit":
-            if "deploy_arm" in mode:
-                arm.arm_stow(0.0)
-                mode.pop("deploy_arm")
-            if "standing" in mode:
-                move.sit()
-                mode.pop("standing")
+            if "power_on" in mode:
+                if "deploy_arm" in mode:
+                    arm.arm_stow(0.0)
+                    spot.power_off()
+                    mode.pop("deploy_arm")
+                    mode.pop("power_on")
+                if "standing" in mode:
+                    move.sit()
+                    mode.pop("standing")
         elif mode["state"] == "graphnav":
             pass
 
 
         elif mode["state"] == "look" or mode["state"] == "follow":
+            if "power_on" not in mode:
+                print('Powering on.')
+                spot.power_on()
+                mode["power_on"] = True
             if "standing" not in mode:
                 move.stand()
                 mode["standing"] = True
@@ -166,11 +194,8 @@ def main():
                     pass
                 arm.moveJ(joints)
                 local_landmarks = None
-        rate.sleep()        
 
-    arm.arm_stow(0.0)
-    rospy.sleep(1)
-    move.sit()
+        loop_rate.sleep()
 
 
 
