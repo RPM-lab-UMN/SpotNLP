@@ -5,7 +5,7 @@ from bosdyn.api.graph_nav import recording_pb2
 import os
 
 class SpotGraphNav:
-    def __init__(self, API, client_metadata=None):
+    def __init__(self, API, graph_folder=None, client_metadata=None):
         if client_metadata is None:
              client_metadata = GraphNavRecordingServiceClient.make_client_metadata(
                 session_name='recording_test', 
@@ -21,7 +21,7 @@ class SpotGraphNav:
             waypoint_env=GraphNavRecordingServiceClient.make_waypoint_environment(
                 client_metadata=client_metadata))
         
-        self.graph_folder = "./graph" # TODO: Change this to the correct path
+        self.graph_folder = graph_folder
 
         self._current_graph = None
         self._current_edges = dict()  #maps to_waypoint to list(from_waypoint)
@@ -41,7 +41,7 @@ class SpotGraphNav:
             if not localization_state.localization.waypoint_id:
                 return (False, 'Robot is not localized')
         try:
-            self._recording_client.start_recording(self._recording_environment)
+            self._recording_client.start_recording(recording_environment=self._recording_environment)
         except Exception as e:
             return (False, f'Failed to start recording: {e}')
         return (True, 'Recording started')
@@ -60,7 +60,7 @@ class SpotGraphNav:
         return (True, 'Recording stopped')
     
     def is_recording(self):
-        return self._recording_client.is_recording()
+        return self._recording_client.get_record_status().is_recording
     
     def create_waypoint(self, waypoint_name):
         response = self._graph_nav_client.create_waypoint(waypoint_name)
@@ -74,25 +74,26 @@ class SpotGraphNav:
             f.write(data)
             f.close()
 
-    def download_full_graph(self):
+    def download_full_graph(self, filepath):
         graph = self._graph_nav_client.download_graph()
         if graph is None:
             return (False, 'Failed to download graph')
-        graph_status = self.download_graph(graph)
-        waypoints_status = self.download_waypoints(graph.waypoints)
-        edges_status = self.download_edges(graph.edges)
+        filepath = os.path.join(self.graph_folder, filepath)
+        graph_status = self.download_graph(graph, filepath)
+        waypoints_status = self.download_waypoints(graph.waypoints, filepath)
+        edges_status = self.download_edges(graph.edges, filepath)
         return {
             'graph': graph_status,
             'waypoints': waypoints_status,
             'edges': edges_status,
         }
 
-    def download_graph(self, graph):
-        status = self._write_to_file(self.graph_folder, 'graph', graph.SerializeToString())
+    def download_graph(self, graph, filepath):
+        status = self._write_to_file(filepath, 'graph', graph.SerializeToString())
         return (status, 'Graph downloaded')
 
         
-    def download_waypoints(self, waypoints):
+    def download_waypoints(self, waypoints, filepath):
         output_message = ''
         num_waypoint_snapshots_downloaded = 0
         for waypoint in waypoints:
@@ -104,13 +105,13 @@ class SpotGraphNav:
             except Exception:
                 output_message += f'Failed to download waypoint snapshot: {waypoint.snapshot_id}\n'
                 continue
-            self._write_bytes(os.path.join(self._download_filepath, 'waypoint_snapshots'),
+            self._write_bytes(filepath, 'waypoint_snapshots',
                               str(waypoint.snapshot_id), waypoint_snapshot.SerializeToString())
             num_waypoint_snapshots_downloaded += 1
         output_message += f'Downloaded {num_waypoint_snapshots_downloaded} of the total {len(waypoints)} waypoint snapshots.\n'
         return (True, output_message)
 
-    def download_edges(self, edges):
+    def download_edges(self, edges, filepath):
         output_message = ''
         num_edge_snapshots_downloaded = 0
         num_to_download = 0
@@ -123,26 +124,19 @@ class SpotGraphNav:
             except Exception:
                 output_message += f'Failed to download edge snapshot: {edge.snapshot_id}\n'
                 continue
-            self._write_bytes(os.path.join(self._download_filepath, 'edge_snapshots'),
+            self._write_bytes(filepath, 'edge_snapshots',
                               str(edge.snapshot_id), edge_snapshot.SerializeToString())
             num_edge_snapshots_downloaded += 1
         output_message += f'Downloaded {num_edge_snapshots_downloaded} of the total {num_to_download} edge snapshots.\n'
         return (True, output_message)
+    
+    def _write_bytes(self, filepath, filename, data):
+        os.makedirs(filepath, exist_ok=True)
+        with open(os.path.join(filepath, filename), 'wb+') as f:
+            f.write(data)
+            f.close()
         
         
     def upload_graph(self):
         pass
         
-    
-
-    
-
-
-        
-
-        
-    
-
-
-
-

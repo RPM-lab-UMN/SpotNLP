@@ -1,6 +1,6 @@
 from bosdyn.client.exceptions import ResponseError, RpcError
 from bosdyn.client.lease import Error as LeaseBaseError
-from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
+from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand, blocking_sit
 import time
 
 class SpotMove:
@@ -19,7 +19,7 @@ class SpotMove:
         cmd = RobotCommandBuilder.synchro_sit_command()
         self._command_client.robot_command(cmd)
         print('Sitting...')
-        blocking_stand(self._command_client, timeout_sec=10)
+        blocking_sit(self._command_client, timeout_sec=10)
 
     
     def _velocity_cmd_helper(self, desc='', v_x=0.0, v_y=0.0, v_rot=0.0):

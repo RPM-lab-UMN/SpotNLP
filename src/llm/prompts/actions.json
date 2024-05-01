@@ -32,7 +32,36 @@
         {
             "command": "look",
             "perameters": {},
-            "description": "This command will make the robot's arm rotate to look at you."
+            "description": "This command will make the robot's arm rotate to look at you. Useful for when the user want stay in place and interact with the robot."
+        },
+        {
+            "command": "reset_follower",
+            "perameters": {},
+            "description": "This command will reset the person that the following program will track. This effects the look and follow commands."
+        },
+        {
+            "command": "fan_power",
+            "perameters": {
+                "power": 100
+            },
+            "description": "This command will set the power of the fan on the robot for 120 seconds. The power is an integer value between 0 and 100. The purpose of this command is to make the robot quieter. The default should be 0."
+        },
+        {
+            "command": "graph_nav_record_start",
+            "perameters": {},
+            "description": "This command will start recording the robot's environment for the graph navigation system. This is used to create a map of the environment for the robot to navigate. The user can add waypoints to the map when this is recording."
+        },
+        {
+            "command": "graph_nav_record_stop",
+            "perameters": {},
+            "description": "This command will stop recording the robot's environment for the graph navigation system."
+        },
+        {
+            "command": "graph_nav_download",
+            "perameters": {
+                "filename": "default"
+            },
+            "description": "This command will download the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the file name of the map to download. The default file name is 'default'."
         }
     ]
 }

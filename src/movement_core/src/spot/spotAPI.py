@@ -49,6 +49,10 @@ class SpotAPI:
         self._robot.power_on(timeout_sec=20)
         print(f'Robot is powered on: {self._robot.is_powered_on()}')
 
+    def power_off(self):
+        self._robot.power_off(cut_immediately=False)
+        print(f'Robot is powered on: {self._robot.is_powered_on()}')
+
     def fan_power(self,power, duration): 
         self._power_client.fan_power_command_async(percent_power=power, duration=duration)
 

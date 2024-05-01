@@ -3,8 +3,9 @@ import time
 import math
 import atexit
 import numpy as np
+import rospkg
 from mp_pose.msg import people
-from std_msgs.msg import Bool, Float32, String
+from std_msgs.msg import Bool, Float32, String, Int32
 from spotAPI import SpotAPI
 from spotMove import SpotMove
 from spotArm import SpotArm
@@ -17,9 +18,21 @@ def main():
     local_image = None
     # mode = False
     mode = {
-        "state": "emote"
+        "state": "None", 
+        "fan_power": None, 
+        "graph_nav_record_start": False,
+        "graph_nav_record_stop": False,
+        "graph_nav_add_waypoint": None,
+        "graph_nav_download": None,
+        "graph_nav_clear": False,
     }
     rospy.Subscriber('/movement/mode', String, lambda msg: mode.update({"state": msg.data}))
+    rospy.Subscriber('/movement/fan_power', Int32, lambda msg: mode.update({"fan_power": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_record_start', Bool, lambda msg: mode.update({"graph_nav_record_start": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_record_stop', Bool, lambda msg: mode.update({"graph_nav_record_stop": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_add_waypoint', String, lambda msg: mode.update({"graph_nav_add_waypoint": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_download', String, lambda msg: mode.update({"graph_nav_download": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_clear', Bool, lambda msg: mode.update({"graph_nav_clear": msg.data}))
     follow_dist = 1.0
     def follow_dist_callback(msg):
         nonlocal follow_dist
@@ -41,37 +54,51 @@ def main():
         local_image = depth
     rospy.Subscriber('/xmem/people', people, pose_callback)
 
+    map_path = rospkg.RosPack().get_path('movement_core') + '/src/maps'
 
     spot = SpotAPI("BOSDYN_E_IP")
     move = SpotMove(spot, 1.0)
     arm = SpotArm(spot)
-    graph = SpotGraphNav(spot)
+    graph = SpotGraphNav(spot, map_path)
 
 
     # arm.image_resolution('640x480')
     spot.power_on()
-    # move.stand()
-    # arm.arm_unstow()
-    # print('Unstowed.')
-    # sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
-    # joints = [sh0, sh1, el0, el1, wr0, wr1]
-    # arm.moveJ(joints)
-    # arm.move_gripper(1.0)
-    # spot.fan_power(0, 120)
-    print('Moved arm.')
-    rate = rospy.Rate(100)
+    # rate = rospy.Rate(100)
+    rate = rospy.Rate(1)
     start_time = time.time()
     while not rospy.is_shutdown():
+        if mode["fan_power"] is not None:
+            spot.fan_power(mode["fan_power"], 120)
+            mode["fan_power"] = None
+        if mode["graph_nav_record_start"]:
+            print(graph.start_recording())
+            mode["graph_nav_record_start"] = False
+            print('Recording started.')
+        if mode["graph_nav_record_stop"]:
+            print(graph.stop_recording())
+            mode["graph_nav_record_stop"] = False
+            print('Recording stopped.')
+        if mode["graph_nav_download"] is not None:
+            print(graph.download_full_graph(mode["graph_nav_download"]))
+            mode["graph_nav_download"] = None
+            print('Graph downloaded.')
+        if mode["graph_nav_clear"]:
+            print(graph.clear_graph())
+            mode["graph_nav_clear"] = False
+            print('Graph cleared.')
+        print(graph.is_recording(),end='\r')
+
         if mode["state"] == "stand":
             if "deploy_arm" in mode:
-                arm.arm_stow()
+                arm.arm_stow(0.0)
                 mode.pop("deploy_arm")
             if "standing" not in mode:
                 move.stand()
                 mode["standing"] = True
         elif mode["state"] == "sit":
             if "deploy_arm" in mode:
-                arm.arm_stow()
+                arm.arm_stow(0.0)
                 mode.pop("deploy_arm")
             if "standing" in mode:
                 move.sit()
@@ -134,11 +161,9 @@ def main():
                     pass
                 arm.moveJ(joints)
                 local_landmarks = None
-        rate.sleep()
-        
+        rate.sleep()        
 
-    arm.arm_stow()
-    print('Stowed.')
+    arm.arm_stow(0.0)
     rospy.sleep(1)
     move.sit()
 

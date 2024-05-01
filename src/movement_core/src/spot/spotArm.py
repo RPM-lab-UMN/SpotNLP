@@ -20,7 +20,10 @@ class SpotArm:
         print('Unstowing arm...')
         block_until_arm_arrives(self._command_client, unstow_command_id, 3.0)
 
-    def arm_stow(self):
+    def arm_stow(self, gripper=None):
+        if gripper is not None:
+            self.move_gripper(gripper)
+            self.gripper_light(False, 0.0)
         stow = RobotCommandBuilder.arm_stow_command()
         stow_command_id = self._command_client.robot_command(stow)
         self._command_client.robot_command_feedback(stow_command_id)
