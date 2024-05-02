@@ -24,8 +24,10 @@ def main():
     pub_graph_nav_record_start = rospy.Publisher('/movement/graph_nav_record_start', Bool, queue_size=10)
     pub_graph_nav_record_stop = rospy.Publisher('/movement/graph_nav_record_stop', Bool, queue_size=10)
     pub_graph_nav_download = rospy.Publisher('/movement/graph_nav_download', String, queue_size=10)
+    pub_graph_nav_upload = rospy.Publisher('/movement/graph_nav_upload', String, queue_size=10)
     pub_graph_nav_clear = rospy.Publisher('/movement/graph_nav_clear', Bool, queue_size=10)
     pub_graph_nav_add_waypoint = rospy.Publisher('/movement/graph_nav_add_waypoint', String, queue_size=10)
+
 
     path = rospkg.RosPack().get_path('llm') + '/prompts'
     role = open(path + '/prompt.txt').read()
@@ -69,8 +71,12 @@ def main():
                 response = get_response()
                 f.write(user_message + '\n---------------\n' + response + '\n')
                 f.flush()
-                message_list.pop(-2)
-                message_list.pop(-2)
+
+                # message_list.pop(-2)
+                # message_list.pop(-2)
+                print(message_list.pop(-2))
+                print(message_list.pop(-2))
+
                 message_list.append({ "role": "system", "content": response })
                 commands = json.loads(response)["outputs"]
 
@@ -78,15 +84,15 @@ def main():
                     # Logistical commands -------------------------------------------
                     if command["command"] == "speak":
                         pub_speak.publish(command["perameters"]["text"])
-                        print(command["perameters"]["text"])
+                        print(f"Spoke: {command['perameters']['text']}")
                     
                     if command["command"] == "reset_follower":
                         pub_reset_xmem.publish(True)
-                        print(command["perameters"])
+                        print("Reset follower")
 
                     if command["command"] == "fan_power":
                         pub_fan_power.publish(command["perameters"]["power"])
-                        print(command["perameters"])
+                        print(f"Set fan power to {command['perameters']['power']}")
 
                     # Movement commands -------------------------------------------
                     if command["command"] == "sit":
@@ -102,33 +108,38 @@ def main():
                     if command["command"] == "follow":
                         pub_camera_enable.publish(True)
                         pub_movement_mode.publish("follow")
-                        print(command["perameters"])
+                        print("Now following")
                     
                     if command["command"] == "look":
                         pub_camera_enable.publish(True)
                         pub_movement_mode.publish("look")
-                        print(command["perameters"])
+                        print("Now looking")
                     
                     # GraphNav commands -------------------------------------------
                     if command["command"] == "graph_nav_record_start":
                         pub_graph_nav_record_start.publish(True)
-                        print(command["perameters"])
+                        print("Started recording")
 
                     if command["command"] == "graph_nav_record_stop":
                         pub_graph_nav_record_stop.publish(True)
-                        print(command["perameters"])
-
-                    if command["command"] == "graph_nav_download":
-                        pub_graph_nav_download.publish(command["perameters"]["filename"])
-                        print(command["perameters"])
+                        print("Stopped recording")
 
                     if command["command"] == "graph_nav_clear":
                         pub_graph_nav_clear.publish(True)
-                        print(command["perameters"])
+                        print("Cleared graph")
 
                     if command["command"] == "graph_nav_add_waypoint":
                         pub_graph_nav_add_waypoint.publish(command["perameters"]["name"] + "\n" + command["perameters"]["description"])
-                        print(command["perameters"])
+                        print(f"Added waypoint: {command['perameters']['name'], command['perameters']['description']}")
+
+                    if command["command"] == "graph_nav_download":
+                        pub_graph_nav_download.publish(command["perameters"]["filename"] + "\n" + command["perameters"]["description"])
+                        print(f"Downloaded graph: {command['perameters']['filename'], command['perameters']['description']}")
+
+                    if command["command"] == "graph_nav_upload":
+                        pub_graph_nav_upload.publish(command["perameters"]["filename"])
+                        print(f"Uploaded graph: {command['perameters']['filename']}")
+                        
 
             rospy.sleep(0.1)
 

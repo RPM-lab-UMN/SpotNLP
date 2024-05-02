@@ -59,9 +59,17 @@
         {
             "command": "graph_nav_download",
             "perameters": {
-                "filename": "default"
+                "filename": "default",
+                "description": "description"
             },
-            "description": "This command will download the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the file name of the map to download. The default file name is 'default'."
+            "description": "This command will download the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the file name of the map to download. The default file name is 'default'. The user must also provide a description of the map. If the content of the map is not clear, ask the user for a description. If you need to ask and you are currently following the user, stop following the user and look instead but start follwing again after it is resolved."
+        },
+        {
+            "command": "graph_nav_upload",
+            "perameters": {
+                "filename": "filename"
+            },
+            "description": "This command will load a map of the environment that the robot has stored. This is used for the graph navigation system. The user must specify the file name of the map to load. The list of available maps is found in the 'Robot Environment Waypoints' message."
         },
         {
             "command": "graph_nav_add_waypoint",

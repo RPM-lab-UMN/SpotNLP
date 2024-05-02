@@ -26,6 +26,7 @@ def main():
         "graph_nav_record_stop": False,
         "graph_nav_add_waypoint": None,
         "graph_nav_download": None,
+        "graph_nav_upload": None,
         "graph_nav_clear": False,
     }
     rospy.Subscriber('/movement/mode', String, lambda msg: mode.update({"state": msg.data}))
@@ -34,6 +35,7 @@ def main():
     rospy.Subscriber('/movement/graph_nav_record_stop', Bool, lambda msg: mode.update({"graph_nav_record_stop": msg.data}))
     rospy.Subscriber('/movement/graph_nav_add_waypoint', String, lambda msg: mode.update({"graph_nav_add_waypoint": msg.data}))
     rospy.Subscriber('/movement/graph_nav_download', String, lambda msg: mode.update({"graph_nav_download": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_upload', String, lambda msg: mode.update({"graph_nav_upload": msg.data}))
     rospy.Subscriber('/movement/graph_nav_clear', Bool, lambda msg: mode.update({"graph_nav_clear": msg.data}))
     follow_dist = 1.0
     def follow_dist_callback(msg):
@@ -72,7 +74,7 @@ def main():
     pub_status_graph = rospy.Publisher('/movement/graph', String, queue_size=10)
     pub_status_spot = rospy.Publisher('/movement/status', String, queue_size=10)
     rospy.timer.Timer(rospy.Duration(.1), lambda event: pub_status_spot.publish(json.dumps(spot.get_status())))
-    pub_status_graph.publish(json.dumps(graph.get_status()))
+    rospy.timer.Timer(rospy.Duration(0.5), lambda event: pub_status_graph.publish(json.dumps(graph.get_status())))
 
     # arm.image_resolution('640x480')
     loop_rate = rospy.Rate(4)
@@ -95,10 +97,15 @@ def main():
             pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Recording stopped.')
         if mode["graph_nav_download"] is not None:
-            print(graph.download_full_graph(mode["graph_nav_download"]))
+            name, description = mode["graph_nav_download"].split('\n')
+            print(graph.download_full_graph(name, description))
             mode["graph_nav_download"] = None
             pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Graph downloaded.')
+        if mode["graph_nav_upload"] is not None:
+            print(graph.upload_full_graph(mode["graph_nav_upload"]))
+            mode["graph_nav_upload"] = None
+            print('Graph uploaded.')
         if mode["graph_nav_clear"]:
             print(graph.clear_graph())
             mode["graph_nav_clear"] = False
@@ -126,12 +133,12 @@ def main():
             if "power_on" in mode:
                 if "deploy_arm" in mode:
                     arm.arm_stow(0.0)
-                    spot.power_off()
                     mode.pop("deploy_arm")
                     mode.pop("power_on")
                 if "standing" in mode:
                     move.sit()
                     mode.pop("standing")
+                spot.power_off()
         elif mode["state"] == "graphnav":
             pass
 
@@ -150,6 +157,7 @@ def main():
                 sh0, sh1, el0, el1, wr0, wr1 = 0.0, -2.8, 1.5, -0.00, 1.35, 0.0
                 joints = [sh0, sh1, el0, el1, wr0, wr1]
                 arm.moveJ(joints)
+                rospy.sleep(2)
                 arm.move_gripper(1.0)
                 mode["deploy_arm"] = True
             # Sin wave of seconds
@@ -178,7 +186,7 @@ def main():
                     q90 = np.quantile(depth, 0.9)
                     depth = depth[(depth >= q10) & (depth <= q90)]
                     depth = np.mean(depth)/1000
-                    print(depth, length)
+                    # print(depth, length)
                 else:
                     depth = None
                 if mode["state"] == "follow":

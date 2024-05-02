@@ -11,8 +11,8 @@ def main():
 
     messages = [
         "start recording",
-        "save a waypoint called dogs, it has a bunch of dogs in the park",
-        "stop recording and save the map",
+        "save a waypoint called home, it people who live there",
+        "stop recording and save the map, the map is called home and it is a two story house",
     ]
     for message in messages:
         print(f"Sending message: {message}")
