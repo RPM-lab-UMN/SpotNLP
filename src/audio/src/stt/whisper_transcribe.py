@@ -19,30 +19,32 @@ def main():
     phrase_time = None
     data_queue = Queue()
     recorder = sr.Recognizer()
-    recorder.energy_threshold = 200
-    recorder.dynamic_energy_threshold = True
+    recorder.energy_threshold = 1000
+    recorder.dynamic_energy_threshold = False
+    # recorder.dynamic_energy_threshold = True
 
-    if 'linux' in platform:
-        mic_name = "default"
-        if not mic_name or mic_name == 'list':
-            print("Available microphone devices are: ")
-            for index, name in enumerate(sr.Microphone.list_microphone_names()):
-                print(f"Microphone with name \"{name}\" found")
-            return
-        else:
-            for index, name in enumerate(sr.Microphone.list_microphone_names()):
-                if mic_name in name:
-                    source = sr.Microphone(sample_rate=16000, device_index=index)
-                    break
-    else:
-        source = sr.Microphone(sample_rate=16000)
+    mic_name = "default"
+    # mic_name = "list"
+    # mic_name = "PowerConf S3"
+    print("Available microphone devices are: ")
+    for index, name in enumerate(sr.Microphone.list_microphone_names()):
+        print(f"Microphone with name \"{name}\" found")
+    for index, name in enumerate(sr.Microphone.list_microphone_names()):
+        if mic_name in name:
+            print(f"Microphone with name \"{name}\" found")
+            source = sr.Microphone(sample_rate=16000, device_index=index)
+            break
 
     model = "medium" + ".en"
+    print("Loading model...")
     audio_model = whisper.load_model(model)
-    record_timeout = 2
-    phrase_timeout = 3
+    print("Model loaded.\n")
+    record_timeout = 4
+    phrase_timeout = 6
     transcription = ['']
 
+    print(source)
+    # Test the microphone.
     with source:
         recorder.adjust_for_ambient_noise(source)
 
@@ -67,14 +69,19 @@ def main():
                 text = result['text'].strip()
                 if phrase_complete:
                     transcription.append(text)
-                    pub.publish(text)
+                    # pub.publish(text)
+                    print(f"Received: {text}")
+                    if "spot" in text.lower():
+                        pub.publish(text)
+                        print(f"Published: {text}")
+                    # pub.publish(text)
                 else:
                     transcription[-1] = text
-                os.system('cls' if os.name=='nt' else 'clear')
-                for line in transcription:
-                    print(line)
+                # os.system('cls' if os.name=='nt' else 'clear')
+                # for line in transcription:
+                #     print(line)
                 # Flush stdout.
-                print('', end='', flush=True)
+                # print('', end='', flush=True)
             else:
                 sleep(0.25)
         except KeyboardInterrupt:

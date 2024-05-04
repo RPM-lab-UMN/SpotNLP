@@ -27,6 +27,8 @@ def main():
     pub_graph_nav_upload = rospy.Publisher('/movement/graph_nav_upload', String, queue_size=10)
     pub_graph_nav_clear = rospy.Publisher('/movement/graph_nav_clear', Bool, queue_size=10)
     pub_graph_nav_add_waypoint = rospy.Publisher('/movement/graph_nav_add_waypoint', String, queue_size=10)
+    pub_graph_nav_localize_to_waypoint = rospy.Publisher('/movement/graph_nav_localize_to_waypoint', String, queue_size=10)
+    pub_graph_nav_go_to_waypoint = rospy.Publisher('/movement/graph_nav_go_to_waypoint', String, queue_size=10)
 
 
     path = rospkg.RosPack().get_path('llm') + '/prompts'
@@ -57,7 +59,7 @@ def main():
         f.write(role + '\n')
         while not rospy.is_shutdown():
             if queue:
-                f.write("--------------------------------\n")
+                f.write("_____________________________________________n")
                 status = robot_status.copy()
                 # print(status)
                 status_message = system_input.replace("__status__", status["status"])
@@ -139,6 +141,15 @@ def main():
                     if command["command"] == "graph_nav_upload":
                         pub_graph_nav_upload.publish(command["perameters"]["filename"])
                         print(f"Uploaded graph: {command['perameters']['filename']}")
+
+                    if command["command"] == "graph_nav_localize_to_waypoint":
+                        pub_graph_nav_localize_to_waypoint.publish(command["perameters"]["name"])
+                        print(f"Localizing to waypoint: {command['perameters']['name']}")
+
+                    if command["command"] == "graph_nav_go_to_waypoint":
+                        pub_movement_mode.publish("graphnav")
+                        pub_graph_nav_go_to_waypoint.publish(command["perameters"]["name"])
+                        print(f"Going to waypoint: {command['perameters']['name']}")
                         
 
             rospy.sleep(0.1)

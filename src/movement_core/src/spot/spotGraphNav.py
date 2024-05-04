@@ -3,10 +3,12 @@ from bosdyn.client.map_processing import MapProcessingServiceClient
 from bosdyn.client.recording import GraphNavRecordingServiceClient
 from bosdyn.api.graph_nav import recording_pb2, map_pb2, nav_pb2, graph_nav_pb2
 from BD.FrameHelpers import get_odom_tform_body
+from bosdyn.client.exceptions import ResponseError
 import json
 import shutil
 import os
 import math
+import rospy
 
 class SpotGraphNav:
     def __init__(self, API, graph_folder=None, client_metadata=None):
@@ -17,6 +19,7 @@ class SpotGraphNav:
                 client_id='RecordingClient',
                 client_type='Python SDK')
         self._robot = API._robot
+        self._robot_state_client = API._robot_state_client
         self._command_client = API._command_client
         self._graph_nav_client = API._robot.ensure_client(GraphNavClient.default_service_name)
         self._recording_client = API._robot.ensure_client(GraphNavRecordingServiceClient.default_service_name)
@@ -185,6 +188,11 @@ class SpotGraphNav:
         map_filepath = os.path.join(self.graph_folder, map_filepath)
         if not os.path.exists(map_filepath):
             return (False, 'The specified graph does not exist')
+        
+        with open(os.path.join(map_filepath + '/waypoint_descriptions.json'), 'r') as f:
+            self.waypoints = json.load(f)
+
+
         with open(os.path.join(map_filepath + '/graph'), 'rb') as graph_file:
             # Load the graph from disk.
             data = graph_file.read()
@@ -233,11 +241,36 @@ class SpotGraphNav:
             return False
         return True
     
-    def localize(self, waypoint_name):
-        if waypoint_name not in self.waypoints:
-            return (False, 'The specified waypoint does not exist')
-        destination_waypoint = self.waypoints[waypoint_name]['waypoint']['id']
+    # def localize(self, waypoint_name):
+    #     print(f"Localizing to {waypoint_name}")
+    #     if waypoint_name not in self.waypoints:
+    #         return (False, 'The specified waypoint does not exist')
+    #     destination_waypoint = self.waypoints[waypoint_name]['waypoint']['id']
 
+    #     robot_state = self._robot_state_client.get_robot_state()
+    #     current_odom_tform_body = get_odom_tform_body(
+    #         robot_state.kinematic_state.transforms_snapshot).to_proto()
+    #     # Create an initial localization to the specified waypoint as the identity.
+    #     localization = nav_pb2.Localization()
+    #     localization.waypoint_id = destination_waypoint
+    #     localization.waypoint_tform_body.rotation.w = 1.0
+    #     self._graph_nav_client.set_localization(
+    #         initial_guess_localization=localization,
+    #         # It's hard to get the pose perfect, search +/-20 deg and +/-20cm (0.2m).
+    #         max_distance=0.2,
+    #         max_yaw=20.0 * math.pi / 180.0,
+    #         fiducial_init=graph_nav_pb2.SetLocalizationRequest.FIDUCIAL_INIT_NO_FIDUCIAL,
+    #         ko_tform_body=current_odom_tform_body)
+    #     if not self.check_localization():
+    #         return (False, 'Failed to localize the robot')
+    #     return (True, 'Robot localized')
+    
+    def localize_to_waypoint(self, waypoint_name):
+        print(f"Localizing to {waypoint_name}")
+        if waypoint_name not in self.waypoints:
+            print(self.waypoints)
+            return (False, 'LOCAL: The specified waypoint does not exist')
+        destination_waypoint = self.waypoints[waypoint_name]['waypoint']['id']
         robot_state = self._robot_state_client.get_robot_state()
         current_odom_tform_body = get_odom_tform_body(
             robot_state.kinematic_state.transforms_snapshot).to_proto()
@@ -252,10 +285,48 @@ class SpotGraphNav:
             max_yaw=20.0 * math.pi / 180.0,
             fiducial_init=graph_nav_pb2.SetLocalizationRequest.FIDUCIAL_INIT_NO_FIDUCIAL,
             ko_tform_body=current_odom_tform_body)
-        if not self.check_localization():
-            return (False, 'Failed to localize the robot')
-        return (True, 'Robot localized')
         
+
+    def go_to_waypoint(self, waypoint_name):
+        if waypoint_name not in self.waypoints:
+            print(self.waypoints)
+            return (False, 'GOTO: The specified waypoint does not exist')
+        destination_waypoint = self.waypoints[waypoint_name]['waypoint']['id']
+        nav_to_cmd_id = None
+        nav_to_cmd_id = self._graph_nav_client.navigate_to(destination_waypoint, 1.0, command_id=nav_to_cmd_id)
+        
+        is_finished = False
+        while not is_finished:
+            try:
+                nav_to_cmd_id = self._graph_nav_client.navigate_to(destination_waypoint, 1.0, command_id=nav_to_cmd_id)
+            except ResponseError as e:
+                print(f'Error while navigating {e}')
+                break
+            rospy.sleep(.5)  
+            is_finished = self._check_success(nav_to_cmd_id)
+        return (True, f"Navigation to {waypoint_name} complete")
+    
+    def _check_success(self, command_id=-1):
+        """Use a navigation command id to get feedback from the robot and sit when command succeeds."""
+        if command_id == -1:
+            # No command, so we have no status to check.
+            return False
+        status = self._graph_nav_client.navigation_feedback(command_id)
+        if status.status == graph_nav_pb2.NavigationFeedbackResponse.STATUS_REACHED_GOAL:
+            # Successfully completed the navigation commands!
+            return True
+        elif status.status == graph_nav_pb2.NavigationFeedbackResponse.STATUS_LOST:
+            print('Robot got lost when navigating the route, the robot will now sit down.')
+            return True
+        elif status.status == graph_nav_pb2.NavigationFeedbackResponse.STATUS_STUCK:
+            print('Robot got stuck when navigating the route, the robot will now sit down.')
+            return True
+        elif status.status == graph_nav_pb2.NavigationFeedbackResponse.STATUS_ROBOT_IMPAIRED:
+            print('Robot is impaired.')
+            return True
+        else:
+            # Navigation command is not complete yet.
+            return False
 
     # END TODO ----------------------------------------------------------
 

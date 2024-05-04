@@ -55,13 +55,9 @@ def main():
         {'name': 'LLM', 'package': 'llm', 'script': 'src/openai/gpt4.py'},
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
+        # {'name': 'Audio', 'package': 'audio', 'script': 'src/audio/src/stt/whisper_transcribe.py'},
         # {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
-        
-        # {'name': 'Buffer', 'package': 'gesture', 'script': 'src/buffer/people_buffer.py'},
-        # {'name': 'Inference', 'package': 'model', 'script': 'src/inference/inference.py'},
-        # {'name': 'Event', 'package': 'state_core', 'script': '/src/event/event.py'},
-        # {'name': 'SM', 'package': 'state_core', 'script': '/src/state_machine/sm.py'},
-        # {'name': 'TTS', 'package': 'tts', 'script': 'src/tts/speech.py'},
+    
         camera,
     ]
 

@@ -28,6 +28,7 @@ def main():
         "graph_nav_download": None,
         "graph_nav_upload": None,
         "graph_nav_clear": False,
+        "graph_nav_localize_to_waypoint": None,
     }
     rospy.Subscriber('/movement/mode', String, lambda msg: mode.update({"state": msg.data}))
     rospy.Subscriber('/movement/fan_power', Int32, lambda msg: mode.update({"fan_power": msg.data}))
@@ -37,6 +38,8 @@ def main():
     rospy.Subscriber('/movement/graph_nav_download', String, lambda msg: mode.update({"graph_nav_download": msg.data}))
     rospy.Subscriber('/movement/graph_nav_upload', String, lambda msg: mode.update({"graph_nav_upload": msg.data}))
     rospy.Subscriber('/movement/graph_nav_clear', Bool, lambda msg: mode.update({"graph_nav_clear": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_go_to_waypoint', String, lambda msg: mode.update({"graph_nav_go_to_waypoint": msg.data}))
+    rospy.Subscriber('/movement/graph_nav_localize_to_waypoint', String, lambda msg: mode.update({"graph_nav_localize_to_waypoint": msg.data}))
     follow_dist = 1.0
     def follow_dist_callback(msg):
         nonlocal follow_dist
@@ -117,6 +120,13 @@ def main():
             mode["graph_nav_add_waypoint"] = None
             pub_status_graph.publish(json.dumps(graph.get_status()))
             print('Waypoint added.')
+        if mode["graph_nav_localize_to_waypoint"] is not None:
+            print("here")
+            print(graph.localize_to_waypoint(mode["graph_nav_localize_to_waypoint"]))
+            mode["graph_nav_localize_to_waypoint"] = None
+            print('Localizing to waypoint.')
+            
+
 
         if mode["state"] == "stand":
             if "power_on" not in mode:
@@ -140,7 +150,20 @@ def main():
                     mode.pop("standing")
                 spot.power_off()
         elif mode["state"] == "graphnav":
-            pass
+            if "power_on" not in mode:
+                print('Powering on.')
+                spot.power_on()
+                mode["power_on"] = True
+            if "standing" not in mode:
+                move.stand()
+                mode["standing"] = True
+            if "deploy_arm" in mode:
+                arm.arm_stow(0.0)
+                mode.pop("deploy_arm")
+            if "graph_nav_go_to_waypoint" in mode:
+                print(graph.go_to_waypoint(mode["graph_nav_go_to_waypoint"]))
+                mode.pop("graph_nav_go_to_waypoint")
+
 
 
         elif mode["state"] == "look" or mode["state"] == "follow":

@@ -44,7 +44,7 @@
             "perameters": {
                 "power": 100
             },
-            "description": "This command will set the power of the fan on the robot for 120 seconds. The power is an integer value between 0 and 100. The purpose of this command is to make the robot quieter. The default should be 0."
+            "description": "This command will set the power of the fan on the robot for 120 seconds. The power is an integer value between 0 and 100. The purpose of this command is to make the robot quieter. The default should be 0. If you are told to be quiet, use this command."
         },
         {
             "command": "graph_nav_record_start",
@@ -78,6 +78,20 @@
                 "description": "description"
             },
             "description": "This command will add a waypoint to the map of the environment that the robot has created. This is used for the graph navigation system. The user can specify the name of the waypoint to add. There should be a unique name for each waypoint. Add a description to each waypoint and ask the user if it is not clear, ask the user about the waypoint. If you need to ask and you are currently following the user, stop following the user and look instead but start follwing again after it is resolved."
+        },
+        {
+            "command": "graph_nav_localize_to_waypoint",
+            "perameters": {
+                "name": "name"
+            },
+            "description": "This command will make the robot localize its location to a waypoint on the map of the environment that the robot has loaded. This is used for the graph navigation system. The user must specify the name of the waypoint to localize to. The list of available waypoints is found in the 'Robot Environment Waypoints' message."
+        },
+        {
+            "command": "graph_nav_go_to_waypoint",
+            "perameters": {
+                "name": "name"
+            },
+            "description": "This command requires active waypoints and localization before it can be used. This command will make the robot go to a waypoint on the map of the environment that the robot has created. This is used for the graph navigation system. The user must specify the name of the waypoint to go to. The list of available waypoints is found in the 'Robot Environment Waypoints' message."
         }
     ]
 }
