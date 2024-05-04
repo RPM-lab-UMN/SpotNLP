@@ -6,11 +6,7 @@
 A NLP interface to extend SpotHRI
 
 
-# OLD README
-
-
-This project aims to create a robust framework for human interaction with the BostonDynamics Spot robot. The framework is based on the MediaPipe pose estimation model and XMem object tracking models. With those models, a ground truth of the human pose is created and used to train a custom gesture recognition model. The gesture recognition model is then used to control the Spot robot. The framework is designed to be modular and can be easily extended to other tasks.
-
+This project aims to create a robust framework for human interaction with the BostonDynamics Spot robot. The framework is based on the MediaPipe pose estimation model and XMem object tracking models.
 
 ## Installation
 

@@ -59,7 +59,7 @@ def main():
         f.write(role + '\n')
         while not rospy.is_shutdown():
             if queue:
-                f.write("_____________________________________________n")
+                f.write("_____________________________________________\n")
                 status = robot_status.copy()
                 # print(status)
                 status_message = system_input.replace("__status__", status["status"])
@@ -74,10 +74,10 @@ def main():
                 f.write(user_message + '\n---------------\n' + response + '\n')
                 f.flush()
 
-                # message_list.pop(-2)
-                # message_list.pop(-2)
-                print(message_list.pop(-2))
-                print(message_list.pop(-2))
+                message_list.pop(-2)
+                message_list.pop(-2)
+                # print(message_list.pop(-2))
+                # print(message_list.pop(-2))
 
                 message_list.append({ "role": "system", "content": response })
                 commands = json.loads(response)["outputs"]
@@ -150,6 +150,14 @@ def main():
                         pub_movement_mode.publish("graphnav")
                         pub_graph_nav_go_to_waypoint.publish(command["perameters"]["name"])
                         print(f"Going to waypoint: {command['perameters']['name']}")
+                    
+                # user_score = input("How well did I do? (1-5): ")
+                # user_reason = input("Why did you give me that score: ")
+                # f.write(f"User score: {user_score}\n")
+                # f.write(f"User reason: {user_reason}\n")
+                # f.flush()
+
+
                         
 
             rospy.sleep(0.1)
