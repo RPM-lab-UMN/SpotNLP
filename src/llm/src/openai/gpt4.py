@@ -34,7 +34,7 @@ def main():
     path = rospkg.RosPack().get_path('llm') + '/prompts'
     role = open(path + '/prompt.txt').read()
     actions = open(path + '/actions.json').read()
-    outputs = open(path + '/outputs.json').read()
+    outputs = open(path + '/outputs_short.json').read()
     role = role.replace('__actions__', actions)
     role = role.replace('__outputs__', outputs)
     # print(role)
@@ -48,7 +48,8 @@ def main():
     ]
     def get_response():
         response = client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            # model="gpt-4-turbo-preview",
+            model="gpt-4o",
             response_format={ "type": "json_object" },
             messages=message_list
         )

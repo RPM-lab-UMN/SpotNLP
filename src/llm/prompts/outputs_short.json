@@ -1,0 +1,16 @@
+{
+    "outputs": [
+        {
+            "command": "action_name_0",
+            "perameters": {}
+        },
+        {
+            "command": "action_name_1",
+            "perameters": {}
+        },
+        {
+            "command": "action_name_2",
+            "perameters": {}
+        }
+    ]
+}

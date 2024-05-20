@@ -91,7 +91,7 @@
             "perameters": {
                 "name": "name"
             },
-            "description": "This command requires active waypoints and localization before it can be used. This command will make the robot go to a waypoint on the map of the environment that the robot has created. This is used for the graph navigation system. The user must specify the name of the waypoint to go to. The list of available waypoints is found in the 'Robot Environment Waypoints' message."
+            "description": "This command requires active waypoints and localization before it can be used. This command will make the robot go to a waypoint on the map of the environment that the robot has created. This is used for the graph navigation system. The user must specify the name of the waypoint to go to. The list of available waypoints is found in the 'Robot Environment Waypoints' message. The robot must not be recording when this is called, so ask to stop recording if it is currently recording."
         }
     ]
 }
