@@ -1,0 +1,8 @@
+Spot, stand up
+Start recording
+Follow me
+This is a waypoint called the left door, it has a table next to it.
+This is a waypoint called TV, it has a large screen in the center of the room.
+This is a waypoint called the cabinet, it has a light switch next to it.
+stop folowing and recording
+go to the table

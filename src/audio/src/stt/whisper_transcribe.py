@@ -19,16 +19,18 @@ def main():
     phrase_time = None
     data_queue = Queue()
     recorder = sr.Recognizer()
-    recorder.energy_threshold = 1000
+    recorder.energy_threshold = 400
     recorder.dynamic_energy_threshold = False
     # recorder.dynamic_energy_threshold = True
 
-    mic_name = "default"
+    # mic_name = "default"
+    mic_name = "sysdefault"
     # mic_name = "list"
     # mic_name = "PowerConf S3"
     print("Available microphone devices are: ")
     for index, name in enumerate(sr.Microphone.list_microphone_names()):
         print(f"Microphone with name \"{name}\" found")
+    exit()
     for index, name in enumerate(sr.Microphone.list_microphone_names()):
         if mic_name in name:
             print(f"Microphone with name \"{name}\" found")
@@ -39,8 +41,8 @@ def main():
     print("Loading model...")
     audio_model = whisper.load_model(model)
     print("Model loaded.\n")
-    record_timeout = 4
-    phrase_timeout = 6
+    record_timeout = 2
+    phrase_timeout = 4
     transcription = ['']
 
     print(source)

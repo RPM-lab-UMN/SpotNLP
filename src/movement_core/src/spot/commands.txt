@@ -1,0 +1,5 @@
+One for each terminal directory (~/SpotNLP):
+roscore
+./setup.sh -l
+python3 ./src/audio/src/stt/keyboard.py
+python3 ./src/audio/src/tts/speech.py
