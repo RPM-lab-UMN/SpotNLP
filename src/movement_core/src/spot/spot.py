@@ -148,7 +148,7 @@ def main():
                 if "standing" in mode:
                     move.sit()
                     mode.pop("standing")
-                spot.power_off()
+                # spot.power_off()
         elif mode["state"] == "graphnav":
             if "power_on" not in mode:
                 print('Powering on.')
@@ -185,10 +185,10 @@ def main():
                 mode["deploy_arm"] = True
             # Sin wave of seconds
             diff = time.time() - start_time
-            light = (math.sin(diff*math.pi) + 1) / 2
-            if mode["state"] == "follow":
-                light = np.round(light)
-            arm.gripper_light(True, light)
+            # light = (math.sin(diff*math.pi) + 1) / 2
+            # if mode["state"] == "follow":
+            #     light = np.round(light)
+            # arm.gripper_light(True, light)
 
             if local_landmarks is not None and local_image is not None:
                 centerpoints = [11,12,23,24]
@@ -217,11 +217,11 @@ def main():
                     if depth is None:
                         x_vel = 0.0
                     else:
-                        x_vel = (depth-follow_dist)*1.0
-                    rot_vel = (x-0.5) * -2
+                        x_vel = (depth-follow_dist)*0.65
+                    rot_vel = (x-0.5) * -1.6
                     move.move(v_x=x_vel, v_y=0.0, v_rot=rot_vel)
                 elif mode["state"] == "look":
-                    joints[0] -= (x-0.5) * 0.35
+                    joints[0] -= (x-0.5) * 0.2
                     pass
                 arm.moveJ(joints)
                 local_landmarks = None

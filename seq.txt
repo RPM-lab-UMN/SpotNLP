@@ -6,3 +6,14 @@ This is a waypoint called TV, it has a large screen in the center of the room.
 This is a waypoint called the cabinet, it has a light switch next to it.
 stop folowing and recording
 go to the table
+
+
+Spot, stand up.
+Start recording. 
+Hi spot, follow me.
+This is the first waypoint, called the left door. (There is a table next to it)
+Spot, keep following me.
+This is the second waypoint, called TV. It has a big screen.
+Let’s keep moving.
+This is the last waypoint, called the cabinet. It has a light switch next to it.
+That’s all, stop recording and following.

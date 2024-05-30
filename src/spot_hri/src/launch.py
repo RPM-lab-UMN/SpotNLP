@@ -55,6 +55,9 @@ def main():
         {'name': 'LLM', 'package': 'llm', 'script': 'src/openai/gpt4.py'},
         {'name': 'MediaPipe', 'package': 'mp_pose', 'script': 'src/pose/mediapipe_pose.py'},
         {'name': 'Xmem', 'package': 'xmem', 'script': 'src/XMem/xmem.py'},
+        # {'name': 'Text', 'package': 'audio', 'script': 'visualize_text.py'},
+        #  python3 ./src/audio/src/tts/speech.py 
+        # {'name': 'Audio', 'package': 'audio', 'script': '/src/tts/speech.py'}
         # {'name': 'Audio', 'package': 'audio', 'script': 'src/audio/src/stt/whisper_transcribe.py'},
         # {'name': 'Sleep', 'package': 5, 'script': 'sleep'},
     
