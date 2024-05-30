@@ -1,7 +1,5 @@
 import rospy
 import time
-import math
-import atexit
 import numpy as np
 import rospkg
 from mp_pose.msg import people
@@ -11,6 +9,7 @@ from spotMove import SpotMove
 from spotArm import SpotArm
 from spotGraphNav import SpotGraphNav   
 import json
+import os
 
 def main():
     rospy.init_node('SpotAPI')
@@ -62,6 +61,9 @@ def main():
     rospy.Subscriber('/xmem/people', people, pose_callback)
 
     map_path = rospkg.RosPack().get_path('movement_core') + '/src/maps'
+    # Check if the path exists
+    if not os.path.exists(map_path):
+        os.makedirs(map_path)
 
     try:
         for i in range(10):
